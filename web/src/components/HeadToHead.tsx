@@ -60,7 +60,7 @@ export default function HeadToHead({ daily, standings }: Props) {
   return (
     <div className="space-y-6">
       {/* Team pickers */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center justify-center gap-3">
         <Select value={teamA} onChange={setTeamA} />
         <span className="text-[#555] font-bold">vs</span>
         <Select value={teamB} onChange={setTeamB} />
@@ -68,14 +68,14 @@ export default function HeadToHead({ daily, standings }: Props) {
 
       {/* Summary cards */}
       {teamA && teamB && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
             { name: teamA, total: totalA, color: colorByTeam[teamA] },
             { name: teamB, total: totalB, color: colorByTeam[teamB] },
-          ].map(({ name, total, color }, i) => (
+          ].map(({ name, total, color }) => (
             <div
               key={name}
-              className={`bg-[#161616] border rounded-lg p-4 ${i === 2 ? 'hidden sm:block' : ''}`}
+              className="bg-[#161616] border rounded-lg p-4 text-center"
               style={{ borderColor: lead === name ? color : '#2a2a2a' }}
             >
               <div className="text-xs text-[#888]">{name}</div>
@@ -85,7 +85,7 @@ export default function HeadToHead({ daily, standings }: Props) {
               <div className="text-xs text-[#555] mt-0.5">HRs</div>
             </div>
           ))}
-          <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-4 hidden sm:block">
+          <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-4 text-center hidden sm:block">
             <div className="text-xs text-[#888]">Gap</div>
             <div className="text-3xl font-bold font-mono mt-1 text-[#f5c518]">
               {deficit}

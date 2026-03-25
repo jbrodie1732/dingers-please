@@ -30,7 +30,7 @@ export default async function HomePage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-[#f5c518]">⚾ Dinger Tracker</h1>
-        <p className="text-[#888] mt-1 text-sm">Post All-Star Break · 2025</p>
+        <p className="text-[#888] mt-1 text-sm">2026 Season</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

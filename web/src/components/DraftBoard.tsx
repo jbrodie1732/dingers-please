@@ -176,47 +176,47 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
     <div className="space-y-6">
 
       {/* Current pick banner */}
-      <div className="rounded-lg border border-[#2a2a2a] bg-[#111] px-4 py-3 flex items-center gap-3">
+      <div className="rounded-lg border border-[#2a2a2a] bg-[#111] px-4 py-5 text-center space-y-1">
         {isDraftDone ? (
           <span className="text-[#f5c518] font-semibold text-lg">Draft complete 🎉</span>
         ) : (
           <>
-            <span className="text-[#888] text-sm">Now picking:</span>
-            <span className="text-[#f5c518] font-bold text-lg">{currentTeam?.name}</span>
-            <span className="text-[#555] text-sm">
-              Round {currentPick?.round} · Pick {currentPick?.overall} of {ROUNDS * TEAM_COUNT}
-            </span>
+            <div className="text-[#888] text-xs uppercase tracking-widest">On the Clock</div>
+            <div className="text-[#f5c518] font-bold text-2xl">{currentTeam?.name}</div>
+            <div className="text-[#555] text-sm">Round {currentPick?.round} · Pick {currentPick?.overall} of {ROUNDS * TEAM_COUNT}</div>
+            <div className="text-[#444] text-xs">{picks.length}/{ROUNDS * TEAM_COUNT} picks made</div>
           </>
         )}
-        <span className="ml-auto text-[#555] text-xs">{picks.length}/{ROUNDS * TEAM_COUNT} picks made</span>
       </div>
 
       {/* Admin pick panel */}
       {!isDraftDone && (
         <div className="rounded-lg border border-[#2a2a2a] bg-[#111] p-4 space-y-4">
-          <div className="text-sm text-[#888] font-semibold uppercase tracking-wide">Make a Pick (Admin)</div>
+          <div className="text-xs text-[#555] font-semibold uppercase tracking-wide text-center">Make a Pick (Admin)</div>
 
           {/* PIN entry */}
           {!authed && (
-            <div className="flex gap-2 items-center">
-              <input
-                type="password"
-                placeholder="Admin PIN"
-                value={pin}
-                onChange={e => { setPin(e.target.value); setPinError(''); }}
-                onKeyDown={e => e.key === 'Enter' && tryUnlock()}
-                className={['bg-[#1a1a1a] border rounded px-3 py-1.5 text-sm text-white w-36 focus:outline-none', pinError ? 'border-red-500 focus:border-red-500' : 'border-[#333] focus:border-[#f5c518]'].join(' ')}
-              />
-              <button
-                onClick={tryUnlock}
-                disabled={pinLoading}
-                className="px-3 py-1.5 bg-[#f5c518] text-black text-sm font-semibold rounded hover:bg-yellow-400 disabled:opacity-50"
-              >
-                {pinLoading ? '…' : 'Unlock'}
-              </button>
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex gap-2 items-center">
+                <input
+                  type="password"
+                  placeholder="Admin PIN"
+                  value={pin}
+                  onChange={e => { setPin(e.target.value); setPinError(''); }}
+                  onKeyDown={e => e.key === 'Enter' && tryUnlock()}
+                  className={['bg-[#1a1a1a] border rounded px-2.5 py-1 text-sm text-white w-28 focus:outline-none', pinError ? 'border-red-500 focus:border-red-500' : 'border-[#333] focus:border-[#f5c518]'].join(' ')}
+                />
+                <button
+                  onClick={tryUnlock}
+                  disabled={pinLoading}
+                  className="px-3 py-1 bg-[#f5c518] text-black text-sm font-semibold rounded hover:bg-yellow-400 disabled:opacity-50"
+                >
+                  {pinLoading ? '…' : 'Unlock'}
+                </button>
+              </div>
               {pinError
-                ? <span className="text-red-400 text-sm">{pinError}</span>
-                : <span className="text-[#555] text-xs">(viewers can watch without a PIN)</span>
+                ? <span className="text-red-400 text-xs">{pinError}</span>
+                : <span className="text-[#444] text-xs">Viewers can watch without a PIN</span>
               }
             </div>
           )}

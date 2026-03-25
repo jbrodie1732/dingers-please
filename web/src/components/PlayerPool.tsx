@@ -40,15 +40,17 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
       {/* Filters */}
       <div className="space-y-3">
 
-        {/* Search + draft status */}
-        <div className="flex flex-wrap gap-2 items-center">
-          <input
-            type="text"
-            placeholder="Search player…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="bg-[#1a1a1a] border border-[#333] rounded px-3 py-1.5 text-sm text-white w-48 focus:outline-none focus:border-[#f5c518]"
-          />
+        {/* Search */}
+        <input
+          type="text"
+          placeholder="Search player…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full bg-[#1a1a1a] border border-[#333] rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#f5c518]"
+        />
+
+        {/* Draft status filter + count */}
+        <div className="flex items-center gap-2">
           {(['all', 'available', 'drafted'] as const).map(f => (
             <button
               key={f}
@@ -63,17 +65,17 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
               {f}
             </button>
           ))}
-          <span className="text-[#555] text-xs ml-auto">{filtered.length} players</span>
+          <span className="text-[#555] text-xs ml-2">{filtered.length}</span>
         </div>
 
-        {/* Position filter */}
-        <div className="flex flex-wrap gap-1">
+        {/* Position filter — single scrollable row */}
+        <div className="flex gap-1 overflow-x-auto pb-0.5 no-scrollbar">
           {['ALL', ...POSITIONS].map(pos => (
             <button
               key={pos}
               onClick={() => setPosFilter(pos)}
               className={[
-                'px-2 py-0.5 rounded text-xs font-mono transition-colors',
+                'px-2 py-0.5 rounded text-xs font-mono transition-colors shrink-0',
                 posFilter === pos
                   ? 'bg-[#f5c518] text-black font-bold'
                   : 'bg-[#1a1a1a] text-[#888] hover:bg-[#222] hover:text-[#ccc]',
@@ -85,7 +87,7 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
         </div>
 
         {/* MLB team filter */}
-        <div className="flex items-center gap-2">
+        <div className="flex justify-center items-center gap-2">
           <span className="text-[#555] text-xs">MLB Team:</span>
           <select
             value={teamFilter}
