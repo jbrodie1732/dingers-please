@@ -37,8 +37,27 @@ export default function AdminPanel() {
   const [newLimit, setNewLimit] = useState('');
 
   // Status
-  const [status,  setStatus]  = useState<{ ok: boolean; msg: string } | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [status,     setStatus]     = useState<{ ok: boolean; msg: string } | null>(null);
+  const [loading,    setLoading]    = useState(false);
+  const [pinError,   setPinError]   = useState('');
+  const [pinLoading, setPinLoading] = useState(false);
+
+  async function tryUnlock() {
+    if (!pin) { setPinError('Enter your PIN'); return; }
+    setPinLoading(true);
+    setPinError('');
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminPin: pin, action: 'verify' }),
+    });
+    setPinLoading(false);
+    if (res.ok) {
+      setAuthed(true);
+    } else {
+      setPinError('Invalid PIN');
+    }
+  }
 
   const fetchData = useCallback(async () => {
     const [
@@ -126,22 +145,24 @@ export default function AdminPanel() {
     return (
       <div className="max-w-sm space-y-3">
         <p className="text-[#888] text-sm">Enter your admin PIN to access these tools.</p>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <input
             type="password"
             placeholder="Admin PIN"
             value={pin}
-            onChange={e => setPin(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && setAuthed(true)}
-            className="bg-[#1a1a1a] border border-[#333] rounded px-3 py-1.5 text-sm text-white w-36 focus:outline-none focus:border-[#f5c518]"
+            onChange={e => { setPin(e.target.value); setPinError(''); }}
+            onKeyDown={e => e.key === 'Enter' && tryUnlock()}
+            className={['bg-[#1a1a1a] border rounded px-3 py-1.5 text-sm text-white w-36 focus:outline-none', pinError ? 'border-red-500 focus:border-red-500' : 'border-[#333] focus:border-[#f5c518]'].join(' ')}
           />
           <button
-            onClick={() => setAuthed(true)}
-            className="px-3 py-1.5 bg-[#f5c518] text-black text-sm font-semibold rounded hover:bg-yellow-400"
+            onClick={tryUnlock}
+            disabled={pinLoading}
+            className="px-3 py-1.5 bg-[#f5c518] text-black text-sm font-semibold rounded hover:bg-yellow-400 disabled:opacity-50"
           >
-            Unlock
+            {pinLoading ? '…' : 'Unlock'}
           </button>
         </div>
+        {pinError && <p className="text-red-400 text-sm">{pinError}</p>}
       </div>
     );
   }

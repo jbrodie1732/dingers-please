@@ -38,8 +38,27 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
 
   // Admin UI state
-  const [pin,       setPin]       = useState('');
-  const [authed,    setAuthed]    = useState(false);
+  const [pin,        setPin]        = useState('');
+  const [authed,     setAuthed]     = useState(false);
+  const [pinError,   setPinError]   = useState('');
+  const [pinLoading, setPinLoading] = useState(false);
+
+  async function tryUnlock() {
+    if (!pin) { setPinError('Enter your PIN'); return; }
+    setPinLoading(true);
+    setPinError('');
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminPin: pin, action: 'verify' }),
+    });
+    setPinLoading(false);
+    if (res.ok) {
+      setAuthed(true);
+    } else {
+      setPinError('Invalid PIN');
+    }
+  }
   const [search,    setSearch]    = useState('');
   const [posFilter, setPosFilter] = useState<string>('ALL');
   const [selected,  setSelected]  = useState<Player | null>(null);
@@ -184,17 +203,21 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
                 type="password"
                 placeholder="Admin PIN"
                 value={pin}
-                onChange={e => setPin(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && setAuthed(true)}
-                className="bg-[#1a1a1a] border border-[#333] rounded px-3 py-1.5 text-sm text-white w-36 focus:outline-none focus:border-[#f5c518]"
+                onChange={e => { setPin(e.target.value); setPinError(''); }}
+                onKeyDown={e => e.key === 'Enter' && tryUnlock()}
+                className={['bg-[#1a1a1a] border rounded px-3 py-1.5 text-sm text-white w-36 focus:outline-none', pinError ? 'border-red-500 focus:border-red-500' : 'border-[#333] focus:border-[#f5c518]'].join(' ')}
               />
               <button
-                onClick={() => setAuthed(true)}
-                className="px-3 py-1.5 bg-[#f5c518] text-black text-sm font-semibold rounded hover:bg-yellow-400"
+                onClick={tryUnlock}
+                disabled={pinLoading}
+                className="px-3 py-1.5 bg-[#f5c518] text-black text-sm font-semibold rounded hover:bg-yellow-400 disabled:opacity-50"
               >
-                Unlock
+                {pinLoading ? '…' : 'Unlock'}
               </button>
-              <span className="text-[#555] text-xs">(viewers can watch without a PIN)</span>
+              {pinError
+                ? <span className="text-red-400 text-sm">{pinError}</span>
+                : <span className="text-[#555] text-xs">(viewers can watch without a PIN)</span>
+              }
             </div>
           )}
 

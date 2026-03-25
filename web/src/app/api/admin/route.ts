@@ -22,6 +22,11 @@ export async function POST(req: NextRequest) {
 
   const db = adminClient();
 
+  // ── verify ───────────────────────────────────────────────────────────────
+  if (action === 'verify') {
+    return NextResponse.json({ success: true });
+  }
+
   // ── reset-draft ──────────────────────────────────────────────────────────
   if (action === 'reset-draft') {
     const [{ error: pickErr }, { error: playerErr }] = await Promise.all([
