@@ -9,6 +9,7 @@ const NAV = [
   { href: '/spray',    label: '💥 Spray'      },
   { href: '/roster',   label: '📋 Rosters'    },
   { href: '/h2h',      label: '⚔️  H2H'        },
+  { href: '/draft',    label: '🎯 Draft'       },
 ];
 
 export default function NavBar() {

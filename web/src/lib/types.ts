@@ -1,7 +1,8 @@
 export type Team = {
-  id:         string;
-  name:       string;
-  created_at: string;
+  id:             string;
+  name:           string;
+  draft_position: number | null;
+  created_at:     string;
 };
 
 export type Player = {
@@ -55,6 +56,19 @@ export type DailyTeamHr = {
   team_name: string;
   game_date: string;
   daily_hrs: number;
+};
+
+export type DraftPick = {
+  id:           string;
+  season:       number;
+  round:        number;
+  pick_in_round: number;
+  overall_pick: number;
+  player_id:    string;
+  team_id:      string;
+  drafted_at:   string;
+  players?:     Player;
+  teams?:       Team;
 };
 
 // 10 distinct team colors (assigned in standings order)
