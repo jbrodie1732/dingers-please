@@ -4,9 +4,8 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Team, Player, DraftPick } from '@/lib/types';
 
-const ROUNDS     = 9;
-const TEAM_COUNT = 10;
-const POSITIONS  = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
+const ROUNDS    = 9;
+const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
 
 function buildPickOrder(teamCount: number, rounds: number) {
   const picks: { round: number; teamIndex: number; pickInRound: number; overall: number }[] = [];
@@ -124,7 +123,9 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
     if (pos && pick.team_id) pickMap.set(`${pick.team_id}:${pos}`, pick);
   }
 
-  const pickOrder = buildPickOrder(TEAM_COUNT, ROUNDS);
+  const teamCount   = teams.length || 10;
+  const totalPicks  = teamCount * ROUNDS;
+  const pickOrder   = buildPickOrder(teamCount, ROUNDS);
   const currentIdx  = picks.length;
   const isDraftDone = currentIdx >= pickOrder.length;
   const currentPick = isDraftDone ? null : pickOrder[currentIdx];
@@ -176,15 +177,15 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
     <div className="space-y-6">
 
       {/* Current pick banner */}
-      <div className="rounded-lg border border-[#2a2a2a] bg-[#111] px-4 py-5 text-center space-y-1">
+      <div className="rounded-lg border border-[#2a2a2a] bg-[#111] px-4 py-3 text-center space-y-0.5">
         {isDraftDone ? (
           <span className="text-[#f5c518] font-semibold text-lg">Draft complete 🎉</span>
         ) : (
           <>
             <div className="text-[#888] text-xs uppercase tracking-widest">On the Clock</div>
             <div className="text-[#f5c518] font-bold text-2xl">{currentTeam?.name}</div>
-            <div className="text-[#555] text-sm">Round {currentPick?.round} · Pick {currentPick?.overall} of {ROUNDS * TEAM_COUNT}</div>
-            <div className="text-[#444] text-xs">{picks.length}/{ROUNDS * TEAM_COUNT} picks made</div>
+            <div className="text-[#555] text-sm">Round {currentPick?.round} · Pick {currentPick?.pickInRound}</div>
+            <div className="text-[#444] text-xs">Pick #{picks.length + 1} of {totalPicks}</div>
           </>
         )}
       </div>

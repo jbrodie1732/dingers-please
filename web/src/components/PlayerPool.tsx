@@ -37,8 +37,8 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
   return (
     <div className="space-y-4">
 
-      {/* Filters */}
-      <div className="space-y-3">
+      {/* Filters — sticky so they stay visible while scrolling */}
+      <div className="space-y-3 sticky top-12 z-40 bg-[#0d0d0d] pb-2 pt-1">
 
         {/* Search */}
         <input
