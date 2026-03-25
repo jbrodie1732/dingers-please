@@ -46,6 +46,7 @@ async function main() {
     const batch = rows.slice(i, i + BATCH).map(r => ({
       name:     r.name,
       position: r.primary_position,
+      mlb_team: r.mlb_team || null,
       team_id:  null,
     }));
     // ignoreDuplicates = true: skip if player somehow already exists (drafted)

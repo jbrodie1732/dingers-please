@@ -10,6 +10,7 @@ const NAV = [
   { href: '/roster',   label: '📋 Rosters'    },
   { href: '/h2h',      label: '⚔️  H2H'        },
   { href: '/draft',    label: '🎯 Draft'       },
+  { href: '/pool',     label: '🗂️ Player Pool'  },
   { href: '/admin',    label: '🔧 Admin'       },
 ];
 
