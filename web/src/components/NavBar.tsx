@@ -10,6 +10,7 @@ const NAV = [
   { href: '/roster',   label: '📋 Rosters'    },
   { href: '/h2h',      label: '⚔️  H2H'        },
   { href: '/draft',    label: '🎯 Draft'       },
+  { href: '/admin',    label: '🔧 Admin'       },
 ];
 
 export default function NavBar() {
