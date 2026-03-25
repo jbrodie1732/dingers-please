@@ -18,7 +18,8 @@
     "seed": "node src/scripts/seed-test.js",
     "seed:wipe": "node src/scripts/seed-test.js --wipe",
     "wipe": "node src/scripts/seed-test.js --wipe --wipe-only",
-    "load-player-pool": "node src/scripts/load-player-pool.js"
+    "load-player-pool": "node src/scripts/load-player-pool.js",
+    "update-mlb-teams": "node src/scripts/update-mlb-teams.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
