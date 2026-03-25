@@ -7,15 +7,15 @@ type PoolPlayer = {
   name: string;
   position: string;
   mlb_team: string | null;
-  fantasy_team: string | null; // null = undrafted
+  fantasy_team: string | null;
 };
 
 const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
 
 export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
-  const [search,    setSearch]    = useState('');
-  const [posFilter, setPosFilter] = useState('ALL');
-  const [teamFilter, setTeamFilter] = useState('ALL');
+  const [search,      setSearch]      = useState('');
+  const [posFilter,   setPosFilter]   = useState('ALL');
+  const [teamFilter,  setTeamFilter]  = useState('ALL');
   const [draftFilter, setDraftFilter] = useState<'all' | 'available' | 'drafted'>('all');
 
   const mlbTeams = useMemo(() => {
@@ -25,9 +25,9 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
 
   const filtered = useMemo(() => {
     return players.filter(p => {
-      if (posFilter !== 'ALL' && p.position !== posFilter) return false;
+      if (posFilter  !== 'ALL' && p.position !== posFilter)  return false;
       if (teamFilter !== 'ALL' && p.mlb_team !== teamFilter) return false;
-      if (draftFilter === 'available' && p.fantasy_team) return false;
+      if (draftFilter === 'available' && p.fantasy_team)  return false;
       if (draftFilter === 'drafted'   && !p.fantasy_team) return false;
       if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
@@ -35,12 +35,13 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
   }, [players, posFilter, teamFilter, draftFilter, search]);
 
   return (
-    <div className="space-y-4">
+    // Outer flex column fills the viewport below the navbar
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 60px)' }}>
 
-      {/* Filters — sticky so they stay visible while scrolling */}
-      <div className="space-y-3 sticky top-12 z-40 bg-[#0d0d0d] pb-2 pt-1">
+      {/* ── Sticky header + filters ── */}
+      <div className="shrink-0 bg-[#0d0d0d] pb-2 space-y-3">
+        <h1 className="text-xl font-bold text-[#f5c518]">🗂️ Player Pool</h1>
 
-        {/* Search */}
         <input
           type="text"
           placeholder="Search player…"
@@ -49,7 +50,6 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
           className="w-full bg-[#1a1a1a] border border-[#333] rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#f5c518]"
         />
 
-        {/* Draft status filter + count */}
         <div className="flex items-center gap-2">
           {(['all', 'available', 'drafted'] as const).map(f => (
             <button
@@ -68,7 +68,6 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
           <span className="text-[#555] text-xs ml-2">{filtered.length}</span>
         </div>
 
-        {/* Position filter — single scrollable row */}
         <div className="flex gap-1 overflow-x-auto pb-0.5 no-scrollbar">
           {['ALL', ...POSITIONS].map(pos => (
             <button
@@ -86,7 +85,6 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
           ))}
         </div>
 
-        {/* MLB team filter */}
         <div className="flex justify-center items-center gap-2">
           <span className="text-[#555] text-xs">MLB Team:</span>
           <select
@@ -100,15 +98,15 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* ── Scrollable table ── */}
+      <div className="overflow-y-auto flex-1 overflow-x-auto">
         <table className="min-w-full text-sm border-collapse">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-[#0d0d0d]">
             <tr className="border-b border-[#2a2a2a]">
               <th className="text-left px-3 py-2 text-[#555] font-normal">Player</th>
               <th className="text-left px-3 py-2 text-[#555] font-normal w-16">Pos</th>
-              <th className="text-left px-3 py-2 text-[#555] font-normal w-16">MLB</th>
-              <th className="text-left px-3 py-2 text-[#555] font-normal">Fantasy Team</th>
+              <th className="text-left px-3 py-2 text-[#555] font-normal w-16">Team</th>
+              <th className="text-left px-3 py-2 text-[#555] font-normal">Squad</th>
             </tr>
           </thead>
           <tbody>
@@ -118,7 +116,7 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
               </tr>
             )}
             {filtered.map(p => (
-              <tr key={p.id} className="border-b border-[#111] hover:bg-[#0d0d0d]">
+              <tr key={p.id} className="border-b border-[#111] hover:bg-[#111]">
                 <td className="px-3 py-2 text-[#e8e8e8]">{p.name}</td>
                 <td className="px-3 py-2 text-[#888] font-mono">{p.position}</td>
                 <td className="px-3 py-2 text-[#888] font-mono">{p.mlb_team ?? '—'}</td>

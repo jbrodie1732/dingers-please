@@ -27,8 +27,7 @@ export default async function PoolPage() {
   }));
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-6 space-y-4">
-      <h1 className="text-xl font-bold text-[#f5c518]">🗂️ Player Pool</h1>
+    <main className="max-w-5xl mx-auto px-4">
       <PlayerPool players={players} />
     </main>
   );
