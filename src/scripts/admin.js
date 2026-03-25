@@ -18,6 +18,7 @@ const COMMANDS = [
   { name: 'set-add-drop-limit — change the season add/drop limit', value: 'set-add-drop-limit' },
   { name: 'show-roster        — dump current rosters + HRs per player', value: 'show-roster' },
   { name: 'show-transactions  — list all add/drop transactions', value: 'show-transactions' },
+  { name: 'reset-draft        — wipe all draft picks and unassign all players', value: 'reset-draft' },
 ];
 
 async function fixPlayerName() {
@@ -154,6 +155,27 @@ async function showTransactions() {
   }
 }
 
+async function resetDraft() {
+  console.log(chalk.red('\n⚠️  This will delete ALL draft picks and unassign ALL players for 2026.'));
+  const { confirm } = await inquirer.prompt([{
+    type: 'confirm', name: 'confirm',
+    message: 'Are you sure?',
+    default: false,
+  }]);
+  if (!confirm) { console.log('Cancelled.'); return; }
+
+  const [{ error: pickErr }, { error: playerErr }] = await Promise.all([
+    supabase.from('draft_picks').delete().eq('season', 2026),
+    supabase.from('players').update({ team_id: null }).not('id', 'is', null),
+  ]);
+
+  if (pickErr || playerErr) {
+    console.error(chalk.red('Error:', pickErr?.message ?? playerErr?.message));
+    return;
+  }
+  console.log(chalk.green('✅ Draft reset. All picks deleted, all players unassigned.'));
+}
+
 async function main() {
   console.log(chalk.bold('\n🔧  DINGER TRACKER ADMIN\n'));
 
@@ -174,6 +196,7 @@ async function main() {
   else if (command === 'set-add-drop-limit') await setAddDropLimit();
   else if (command === 'show-roster')        await showRoster();
   else if (command === 'show-transactions')  await showTransactions();
+  else if (command === 'reset-draft')        await resetDraft();
   else console.log(chalk.red(`Unknown command: ${command}`));
 }
 

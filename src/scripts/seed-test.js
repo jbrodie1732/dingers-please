@@ -72,7 +72,13 @@ async function wipe() {
 }
 
 async function main() {
-  if (WIPE) await wipe();
+  if (WIPE) {
+    await wipe();
+    if (process.argv.includes('--wipe-only')) {
+      console.log('✅ Wipe complete. Run `npm run load-player-pool` to restore the real player pool.');
+      return;
+    }
+  }
 
   const teamNames = DRAFT_CFG.teams;
   console.log(`🏈 Seeding ${teamNames.length} teams...`);

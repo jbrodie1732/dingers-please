@@ -16,7 +16,9 @@
     "pm2:logs": "pm2 logs dinger-watcher",
     "pm2:status": "pm2 status",
     "seed": "node src/scripts/seed-test.js",
-    "seed:wipe": "node src/scripts/seed-test.js --wipe"
+    "seed:wipe": "node src/scripts/seed-test.js --wipe",
+    "wipe": "node src/scripts/seed-test.js --wipe --wipe-only",
+    "load-player-pool": "node src/scripts/load-player-pool.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
