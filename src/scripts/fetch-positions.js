@@ -12,9 +12,11 @@ const cheerio = require('cheerio');
 const fs      = require('fs');
 const path    = require('path');
 
+// Default to last completed season (2025) since that's the source of position eligibility.
+// Override with --year YYYY if needed.
 const YEAR = process.argv.includes('--year')
   ? process.argv[process.argv.indexOf('--year') + 1]
-  : new Date().getFullYear();
+  : 2025;
 
 const URL = `https://www.baseball-reference.com/leagues/majors/${YEAR}-appearances-fielding.shtml`;
 const OUT  = path.join(__dirname, '../../data/positions.csv');

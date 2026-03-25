@@ -1,7 +1,7 @@
 // Edit this file BEFORE running `npm run draft`
 // Teams listed in snake draft order (pick 1 goes to teams[0], etc.)
 module.exports = {
-  season: 2025,
+  season: 2026,
   teams: [
     'Rob',
     'Jak',

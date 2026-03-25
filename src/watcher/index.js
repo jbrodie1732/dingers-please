@@ -18,7 +18,8 @@ const CSV_PATH = path.join(__dirname, '../../data/mlb_stadia_paths.csv');
 
 let emptyPollCount = 0;
 let seen           = new Set();   // hrIds processed this run
-let playerCache    = new Map();   // player name → { id, teams: { name } }
+let playerCache    = new Map();   // player name → player row  (primary: draft name)
+let playerIdCache  = new Map();   // mlb_player_id → player row (reliable; used first)
 let stadiaByPark;                 // loaded once at startup
 
 // ---- Rank calculator ----
@@ -52,18 +53,23 @@ async function init() {
   seen = new Set(existingIds);
   console.log(`📋 ${seen.size} existing HRs in DB`);
 
-  // Load drafted players into memory cache
+  // Load drafted players into memory caches
   const { data: players, error } = await supabase
     .from('players')
-    .select('id, name, teams(name)')
-    .not('team_id', 'is', null);
+    .select('id, name, mlb_player_id, mlb_api_name, teams(name)')
+    .not('team_id', 'is', null)
+    .is('dropped_at', null);  // only active roster members
 
   if (error) {
     console.error('❌ Failed to load players from DB:', error.message);
     process.exit(1);
   }
-  players.forEach(p => playerCache.set(p.name, p));
-  console.log(`👤 ${playerCache.size} drafted players loaded`);
+  players.forEach(p => {
+    playerCache.set(p.name, p);
+    if (p.mlb_api_name)  playerCache.set(p.mlb_api_name, p);   // alternate name
+    if (p.mlb_player_id) playerIdCache.set(p.mlb_player_id, p); // ID lookup (most reliable)
+  });
+  console.log(`👤 ${players.length} active players loaded (${playerIdCache.size} with MLB ID)`);
   console.log(`⏱  Polling every ${POLL_INTERVAL_MS / 1000}s. Let's get some dingers.\n`);
 
   pollGames();
@@ -106,9 +112,19 @@ async function pollGames() {
           if (seen.has(hrId) || processedThisPoll.has(hrId)) continue;
           processedThisPoll.add(hrId);
 
-          const playerName = play.matchup?.batter?.fullName;
-          const player     = playerCache.get(playerName);
-          if (!player) continue;  // not drafted, skip silently
+          const playerName  = play.matchup?.batter?.fullName;
+          const mlbBatterId = play.matchup?.batter?.id;
+
+          // Match by MLB numeric ID first (reliable), fall back to name
+          let player = (mlbBatterId && playerIdCache.get(mlbBatterId))
+                    || playerCache.get(playerName);
+
+          if (!player) continue; // not on any roster — skip silently
+
+          // Warn if we matched by name but this player has no ID yet (post-draft reminder)
+          if (!mlbBatterId || !playerIdCache.has(mlbBatterId)) {
+            console.log(`⚠️  Name-matched ${playerName} (no MLB ID on file — run fetch-mlb-ids)`);
+          }
 
           const hit = getHitData(play);
 

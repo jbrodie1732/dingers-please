@@ -27,7 +27,7 @@ function buildAlertMessage({ playerName, playerTotal, distance, fantasyTeam, tea
 
 function sendAlert(alertData) {
   const message = buildAlertMessage(alertData);
-  execFile('osascript', [APPLESCRIPT, message], (error, _stdout, stderr) => {
+  execFile('osascript', [APPLESCRIPT, message, CHAT_NAME], (error, _stdout, stderr) => {
     if (error) {
       console.error('❌ iMessage alert error:', stderr || error.message);
     } else {
