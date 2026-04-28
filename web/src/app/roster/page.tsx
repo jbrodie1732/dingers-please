@@ -22,11 +22,17 @@ export default async function RosterPage() {
   const { players, standings } = await getData();
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[#f5c518]">Rosters</h1>
-        <p className="text-[#888] text-sm mt-1">Team-by-team breakdown</p>
+    <div className="screen">
+      <div className="hero-header">
+        <div className="hero-eyebrow">9 STARTERS · ONE PER POSITION</div>
+        <h1 className="hero-title">Rosters</h1>
+        <div className="hero-meta">
+          <span><b>{standings.length}</b> teams</span>
+          <span className="dot-sep">·</span>
+          <span><b>{players.length}</b> players</span>
+        </div>
       </div>
+
       <RosterView players={players} standings={standings} />
     </div>
   );

@@ -4,16 +4,27 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Dark theme base
-        bg:      '#0d0d0d',
-        surface: '#161616',
-        border:  '#2a2a2a',
-        muted:   '#888',
-        // Accent
-        accent:  '#f5c518',
+        'c-bg':         'var(--c-bg)',
+        'c-surface':    'var(--c-surface)',
+        'c-surfaceHi':  'var(--c-surfaceHi)',
+        'c-border':     'var(--c-border)',
+        'c-borderHi':   'var(--c-borderHi)',
+        'c-text':       'var(--c-text)',
+        'c-textMuted':  'var(--c-textMuted)',
+        'c-textDim':    'var(--c-textDim)',
+        'c-accent':     'var(--c-accent)',
+        'c-accentHot':  'var(--c-accentHot)',
+        'c-diamond':    'var(--c-diamond)',
+        'c-foul':       'var(--c-foul)',
+        'c-bone':       'var(--c-bone)',
+        'c-legit':      'var(--c-legit)',
+        'c-mickey':     'var(--c-mickey)',
       },
       fontFamily: {
-        mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
+        display: ['var(--font-display)', 'system-ui', 'sans-serif'],
+        ui:      ['var(--font-ui)',      'system-ui', 'sans-serif'],
+        mono:    ['var(--font-mono)',    'ui-monospace', 'monospace'],
+        digital: ['var(--font-digital)', 'ui-monospace', 'monospace'],
       },
     },
   },

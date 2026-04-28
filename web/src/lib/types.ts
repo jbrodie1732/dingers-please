@@ -11,6 +11,7 @@ export type Player = {
   team_id:       string | null;
   position:      string;
   mlb_player_id: number | null;
+  mlb_team?:     string | null;
   created_at:    string;
   teams?:        Team;
 };
@@ -71,16 +72,18 @@ export type DraftPick = {
   teams?:       Team;
 };
 
-// 10 distinct team colors (assigned in standings order)
+// 15 team colors — deterministically assigned by team ID hash, not standings rank
 export const TEAM_COLORS = [
-  '#f5c518',  // gold
-  '#4ecdc4',  // teal
-  '#ff6b6b',  // red
-  '#a8e6cf',  // mint
-  '#ff8b94',  // pink
-  '#9b59b6',  // purple
-  '#3498db',  // blue
-  '#e67e22',  // orange
-  '#2ecc71',  // green
-  '#e74c3c',  // crimson
+  '#E8502A', '#3B82F6', '#F59E0B', '#10B981', '#EC4899',
+  '#8B5CF6', '#06B6D4', '#F97316', '#84CC16', '#EF4444',
+  '#14B8A6', '#D946EF', '#FB923C', '#A3E635', '#60A5FA',
 ] as const;
+
+export function getTeamColor(teamId: string): string {
+  let hash = 0;
+  for (let i = 0; i < teamId.length; i++) {
+    hash = ((hash << 5) - hash) + teamId.charCodeAt(i);
+    hash |= 0;
+  }
+  return TEAM_COLORS[Math.abs(hash) % TEAM_COLORS.length];
+}

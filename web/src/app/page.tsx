@@ -3,7 +3,7 @@ import type { TeamStanding, HomeRun } from '@/lib/types';
 import StandingsTable from '@/components/StandingsTable';
 import RealtimeFeed from '@/components/RealtimeFeed';
 
-export const revalidate = 0; // always fresh on server render
+export const revalidate = 0;
 
 async function getStandings(): Promise<TeamStanding[]> {
   const { data } = await supabase
@@ -16,33 +16,43 @@ async function getStandings(): Promise<TeamStanding[]> {
 async function getRecentHRs(): Promise<HomeRun[]> {
   const { data } = await supabase
     .from('home_runs')
-    .select('*, players(name, position, teams(name))')
+    .select('*, players(name, position, team_id, teams(name))')
     .order('hit_at', { ascending: false })
     .limit(15);
   return data || [];
 }
 
+async function getTotalHRs(): Promise<number> {
+  const { count } = await supabase
+    .from('home_runs')
+    .select('id', { count: 'exact', head: true });
+  return count ?? 0;
+}
+
 export default async function HomePage() {
-  const [standings, recentHRs] = await Promise.all([getStandings(), getRecentHRs()]);
+  const [standings, recentHRs, totalHRs] = await Promise.all([
+    getStandings(),
+    getRecentHRs(),
+    getTotalHRs(),
+  ]);
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-[#f5c518]">⚾ Dinger Tracker</h1>
-        <p className="text-[#888] mt-1 text-sm">2026 Season</p>
+    <div className="screen">
+      <div className="hero-header">
+        <div className="hero-eyebrow">SEASON 2026</div>
+        <h1 className="hero-title">Standings</h1>
+        <div className="hero-meta">
+          <span><b>{totalHRs}</b> dingers logged</span>
+          <span className="dot-sep">·</span>
+          <span><b>{standings.length}</b> teams</span>
+          <span className="dot-sep">·</span>
+          <span>Updated <b>live</b></span>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Standings — takes up 2/3 width on large screens */}
-        <div className="lg:col-span-2">
-          <StandingsTable initialStandings={standings} />
-        </div>
-
-        {/* Live feed — right column */}
-        <div>
-          <RealtimeFeed initialHRs={recentHRs} />
-        </div>
+      <div className="standings-grid">
+        <StandingsTable initialStandings={standings} />
+        <RealtimeFeed initialHRs={recentHRs} />
       </div>
     </div>
   );

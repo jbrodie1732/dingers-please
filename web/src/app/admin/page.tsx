@@ -2,9 +2,16 @@ import AdminPanel from '@/components/AdminPanel';
 
 export default function AdminPage() {
   return (
-    <main className="max-w-3xl mx-auto px-4 py-6 space-y-4">
-      <h1 className="text-xl font-bold text-[#f5c518]">🔧 Admin</h1>
+    <div className="screen">
+      <div className="hero-header">
+        <div className="hero-eyebrow">COMMISSIONER TOOLS</div>
+        <h1 className="hero-title">Admin</h1>
+        <div className="hero-meta">
+          <span>Add/drop · Manual HR · Season config · Danger zone</span>
+        </div>
+      </div>
+
       <AdminPanel />
-    </main>
+    </div>
   );
 }

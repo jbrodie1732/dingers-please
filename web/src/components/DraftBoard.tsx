@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Team, Player, DraftPick } from '@/lib/types';
+import { getTeamColor } from '@/lib/types';
 
 const ROUNDS    = 9;
 const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
@@ -14,20 +15,26 @@ function buildPickOrder(teamCount: number, rounds: number) {
     const snake = r % 2 === 0;
     for (let p = 0; p < teamCount; p++) {
       overall++;
-      picks.push({
-        round:       r,
-        teamIndex:   snake ? teamCount - 1 - p : p,
-        pickInRound: p + 1,
-        overall,
-      });
+      picks.push({ round: r, teamIndex: snake ? teamCount - 1 - p : p, pickInRound: p + 1, overall });
     }
   }
   return picks;
 }
 
+function TierDots({ hrs }: { hrs: number }) {
+  const tier = hrs >= 5 ? 1 : hrs >= 3 ? 2 : hrs >= 2 ? 3 : hrs >= 1 ? 4 : 5;
+  return (
+    <span className="tier-dots">
+      {[1, 2, 3, 4, 5].map(i => (
+        <span key={i} className={`tdot${i <= (6 - tier) ? ' is-on' : ''}`} />
+      ))}
+    </span>
+  );
+}
+
 type Props = {
-  initialTeams:  Team[];
-  initialPicks:  DraftPick[];
+  initialTeams:   Team[];
+  initialPicks:   DraftPick[];
   initialPlayers: Player[];
 };
 
@@ -35,12 +42,19 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
   const [teams,   setTeams]   = useState<Team[]>(initialTeams);
   const [picks,   setPicks]   = useState<DraftPick[]>(initialPicks);
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
+  const [newPickIds, setNewPickIds] = useState<Set<string>>(new Set());
 
-  // Admin UI state
   const [pin,        setPin]        = useState('');
   const [authed,     setAuthed]     = useState(false);
   const [pinError,   setPinError]   = useState('');
   const [pinLoading, setPinLoading] = useState(false);
+
+  const [search,    setSearch]    = useState('');
+  const [posFilter, setPosFilter] = useState<string>('ALL');
+  const [selected,  setSelected]  = useState<Player | null>(null);
+  const [status,    setStatus]    = useState<{ ok: boolean; msg: string } | null>(null);
+  const [loading,   setLoading]   = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   async function tryUnlock() {
     if (!pin) { setPinError('Enter your PIN'); return; }
@@ -52,31 +66,21 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
       body: JSON.stringify({ adminPin: pin, action: 'verify' }),
     });
     setPinLoading(false);
-    if (res.ok) {
-      setAuthed(true);
-    } else {
-      setPinError('Invalid PIN');
-    }
+    if (res.ok) { setAuthed(true); }
+    else         { setPinError('Invalid PIN'); }
   }
-  const [search,    setSearch]    = useState('');
-  const [posFilter, setPosFilter] = useState<string>('ALL');
-  const [selected,  setSelected]  = useState<Player | null>(null);
-  const [status,    setStatus]    = useState<{ ok: boolean; msg: string } | null>(null);
-  const [loading,   setLoading]   = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
 
-  // On mount, fetch fresh state (handles navigating back to this page mid-draft)
   useEffect(() => {
     async function fetchFresh() {
       const [{ data: freshPicks }, { data: freshPlayers }] = await Promise.all([
         supabase
           .from('draft_picks')
-          .select('*, players(id, name, position), teams(id, name)')
+          .select('*, players(id, name, position, mlb_team), teams(id, name)')
           .eq('season', 2026)
           .order('overall_pick'),
         supabase
           .from('players')
-          .select('id, name, position, team_id, mlb_player_id, created_at')
+          .select('id, name, position, mlb_team, team_id, mlb_player_id, created_at')
           .order('name'),
       ]);
       if (freshPicks)   setPicks(freshPicks as DraftPick[]);
@@ -85,24 +89,10 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
     fetchFresh();
   }, []);
 
-  // Realtime: players + draft_picks
-  useEffect(() => {
-    const ch = supabase.channel('draft-live')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'players' }, () => {
-        refreshPlayers();
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'draft_picks' }, (payload) => {
-        refreshPick(payload.new as DraftPick);
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(ch); };
-  }, []);
-
   const refreshPlayers = useCallback(async () => {
     const { data } = await supabase
       .from('players')
-      .select('id, name, position, team_id, mlb_player_id, created_at')
+      .select('id, name, position, mlb_team, team_id, mlb_player_id, created_at')
       .order('name');
     if (data) setPlayers(data as Player[]);
   }, []);
@@ -110,41 +100,51 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
   const refreshPick = useCallback(async (newPick: DraftPick) => {
     const { data } = await supabase
       .from('draft_picks')
-      .select('*, players(id, name, position), teams(id, name)')
+      .select('*, players(id, name, position, mlb_team), teams(id, name)')
       .eq('id', newPick.id)
       .single();
-    if (data) setPicks(prev => [...prev, data as DraftPick]);
+    if (data) {
+      setPicks(prev => [...prev, data as DraftPick]);
+      setNewPickIds(prev => new Set([...Array.from(prev), newPick.id]));
+      setTimeout(() => setNewPickIds(prev => { const n = new Set(Array.from(prev)); n.delete(newPick.id); return n; }), 1400);
+    }
   }, []);
 
-  // Derived: what has been picked
-  const pickMap = new Map<string, DraftPick>(); // `${teamId}:${position}` → pick
+  useEffect(() => {
+    const ch = supabase.channel('draft-live')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'players' }, () => refreshPlayers())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'draft_picks' }, payload => refreshPick(payload.new as DraftPick))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [refreshPlayers, refreshPick]);
+
+  // Derived
+  const sortedTeams = [...teams].sort((a, b) => (a.draft_position ?? 99) - (b.draft_position ?? 99));
+  const pickMap     = new Map<string, DraftPick>();
   for (const pick of picks) {
     const pos = pick.players?.position;
     if (pos && pick.team_id) pickMap.set(`${pick.team_id}:${pos}`, pick);
   }
 
-  const teamCount   = teams.length || 10;
+  const teamCount   = sortedTeams.length || 10;
   const totalPicks  = teamCount * ROUNDS;
   const pickOrder   = buildPickOrder(teamCount, ROUNDS);
   const currentIdx  = picks.length;
   const isDraftDone = currentIdx >= pickOrder.length;
   const currentPick = isDraftDone ? null : pickOrder[currentIdx];
-  const currentTeam = currentPick ? teams[currentPick.teamIndex] : null;
+  const currentTeam = currentPick ? sortedTeams[currentPick.teamIndex] : null;
+  const teamColor   = currentTeam ? getTeamColor(currentTeam.id) : 'var(--c-accent)';
 
-  // Available (undrafted) players filtered
+  const takenPositions = new Set(
+    currentTeam ? picks.filter(p => p.team_id === currentTeam.id).map(p => p.players?.position).filter(Boolean) as string[] : []
+  );
+
   const undrafted = players.filter(p => p.team_id === null);
   const filtered  = undrafted.filter(p => {
-    const matchPos = posFilter === 'ALL' || p.position === posFilter;
-    const matchSearch = search === '' ||
-      p.name.toLowerCase().includes(search.toLowerCase());
-    return matchPos && matchSearch;
+    if (posFilter !== 'ALL' && p.position !== posFilter) return false;
+    if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
   });
-
-  // What positions does the current team already have drafted?
-  const currentTeamPicks = currentTeam
-    ? picks.filter(p => p.team_id === currentTeam.id)
-    : [];
-  const takenPositions = new Set(currentTeamPicks.map(p => p.players?.position).filter(Boolean));
 
   async function submitPick() {
     if (!selected) return;
@@ -160,229 +160,246 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
       if (!res.ok) {
         setStatus({ ok: false, msg: data.error ?? 'Unknown error' });
       } else {
-        setStatus({ ok: true, msg: `✅ ${data.player} → ${data.team} (Rd ${data.round}, Pick ${data.overallPick})` });
+        setStatus({ ok: true, msg: `${data.player} → ${data.team} (Rd ${data.round}, Pick ${data.overallPick})` });
         setSelected(null);
         setSearch('');
-        searchRef.current?.focus();
+        setTimeout(() => searchRef.current?.focus(), 50);
       }
     } finally {
       setLoading(false);
     }
   }
 
-  // ── Board grid ────────────────────────────────────────────────────────────
-  const sortedTeams = [...teams].sort((a, b) => (a.draft_position ?? 99) - (b.draft_position ?? 99));
-
   return (
-    <div className="space-y-6">
-
-      {/* Current pick banner */}
-      <div className="rounded-lg border border-[#2a2a2a] bg-[#111] px-4 py-3 text-center space-y-0.5">
+    <div className="screen">
+      {/* ── On the clock banner ─────────────────────────────────────────── */}
+      <div
+        className={`onclock${isDraftDone ? ' is-done' : ''}`}
+        style={!isDraftDone ? { '--team': teamColor } as React.CSSProperties : {}}
+      >
         {isDraftDone ? (
-          <span className="text-[#f5c518] font-semibold text-lg">Draft complete 🎉</span>
+          <div className="onclock-done">
+            <div className="onclock-eyebrow">DRAFT COMPLETE</div>
+            <div className="onclock-name">All {totalPicks} picks made</div>
+          </div>
         ) : (
           <>
-            <div className="text-[#888] text-xs uppercase tracking-widest">On the Clock</div>
-            <div className="text-[#f5c518] font-bold text-2xl">{currentTeam?.name}</div>
-            <div className="text-[#555] text-sm">Round {currentPick?.round} · Pick {currentPick?.pickInRound}</div>
-            <div className="text-[#444] text-xs">Pick #{picks.length + 1} of {totalPicks}</div>
+            <div className="onclock-l">
+              <div className="onclock-eyebrow">ON THE CLOCK</div>
+              <div className="onclock-name">{currentTeam?.name}</div>
+            </div>
+            <div className="onclock-m">
+              <div className="onclock-pickbig">
+                <div className="onclock-num">#{picks.length + 1}</div>
+                <div className="onclock-of">/ {totalPicks}</div>
+              </div>
+              <div className="onclock-rd">RD {currentPick?.round} · PICK {currentPick?.pickInRound}</div>
+            </div>
+            <div className="onclock-r">
+              <div className="onclock-clock">
+                <div className="clock-num">—:——</div>
+                <div className="clock-lbl">PICK CLOCK</div>
+              </div>
+            </div>
           </>
         )}
       </div>
 
-      {/* Admin pick panel */}
+      {/* ── Pick panel ─────────────────────────────────────────────────── */}
       {!isDraftDone && (
-        <div className="rounded-lg border border-[#2a2a2a] bg-[#111] p-4 space-y-4">
-          <div className="text-xs text-[#555] font-semibold uppercase tracking-wide text-center">Make a Pick (Admin)</div>
-
-          {/* PIN entry */}
-          {!authed && (
-            <div className="flex flex-col items-center gap-2">
-              <div className="flex gap-2 items-center">
+        <div className="card draft-pick">
+          {!authed ? (
+            <div className="pin-row">
+              <div className="pin-eyebrow">COMMISSIONER PIN REQUIRED TO MAKE PICKS</div>
+              <div className="pin-fields">
                 <input
                   type="password"
-                  placeholder="Admin PIN"
+                  className="pin-input"
+                  placeholder="••••"
                   value={pin}
                   onChange={e => { setPin(e.target.value); setPinError(''); }}
                   onKeyDown={e => e.key === 'Enter' && tryUnlock()}
-                  className={['bg-[#1a1a1a] border rounded px-2.5 py-1 text-sm text-white w-28 focus:outline-none', pinError ? 'border-red-500 focus:border-red-500' : 'border-[#333] focus:border-[#f5c518]'].join(' ')}
                 />
-                <button
-                  onClick={tryUnlock}
-                  disabled={pinLoading}
-                  className="px-3 py-1 bg-[#f5c518] text-black text-sm font-semibold rounded hover:bg-yellow-400 disabled:opacity-50"
-                >
+                <button className="btn-primary" onClick={tryUnlock} disabled={pinLoading}>
                   {pinLoading ? '…' : 'Unlock'}
                 </button>
+                <span className={`pin-msg${pinError ? ' is-err' : ''}`}>
+                  {pinError || 'Viewers can watch without a PIN'}
+                </span>
               </div>
-              {pinError
-                ? <span className="text-red-400 text-xs">{pinError}</span>
-                : <span className="text-[#444] text-xs">Viewers can watch without a PIN</span>
-              }
             </div>
-          )}
-
-          {authed && (
-            <div className="space-y-3">
-              {/* Position filter */}
-              <div className="flex flex-wrap gap-1">
-                {['ALL', ...POSITIONS].map(pos => (
-                  <button
-                    key={pos}
-                    onClick={() => setPosFilter(pos)}
-                    className={[
-                      'px-2 py-0.5 rounded text-xs font-mono transition-colors',
-                      posFilter === pos
-                        ? 'bg-[#f5c518] text-black font-bold'
-                        : takenPositions.has(pos)
-                          ? 'bg-[#1a1a1a] text-[#444] line-through cursor-not-allowed'
-                          : 'bg-[#1a1a1a] text-[#aaa] hover:bg-[#222]',
-                    ].join(' ')}
-                  >
-                    {pos}
-                  </button>
-                ))}
+          ) : (
+            <div className="pick-flow">
+              <div className="pick-row">
+                <input
+                  ref={searchRef}
+                  className="pick-search"
+                  placeholder="Search batter to draft…"
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setSelected(null); }}
+                  autoFocus
+                />
+                <div className="pick-pos-filters">
+                  {['ALL', ...POSITIONS].map(pos => {
+                    const blocked = pos !== 'ALL' && takenPositions.has(pos);
+                    return (
+                      <button
+                        key={pos}
+                        className={`posbtn${posFilter === pos ? ' is-on' : ''}${blocked ? ' is-blocked' : ''}`}
+                        style={blocked ? { opacity: 0.3, textDecoration: 'line-through' } : {}}
+                        onClick={() => !blocked && setPosFilter(pos)}
+                        disabled={blocked}
+                      >
+                        {pos}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Search */}
-              <input
-                ref={searchRef}
-                type="text"
-                placeholder="Search player…"
-                value={search}
-                onChange={e => { setSearch(e.target.value); setSelected(null); }}
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#f5c518]"
-              />
-
-              {/* Player list */}
               {search.length > 0 && (
-                <div className="max-h-48 overflow-y-auto rounded border border-[#2a2a2a] bg-[#0d0d0d] divide-y divide-[#1a1a1a]">
+                <div className="pick-list">
                   {filtered.length === 0 && (
-                    <div className="px-3 py-2 text-[#555] text-sm">No players found</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--c-textDim)', letterSpacing: '0.1em', padding: '12px 0' }}>
+                      NO PLAYERS MATCH
+                    </div>
                   )}
-                  {filtered.slice(0, 50).map(p => {
+                  {filtered.slice(0, 14).map(p => {
                     const blocked = takenPositions.has(p.position);
                     return (
                       <button
                         key={p.id}
+                        className={`pick-item${selected?.id === p.id ? ' is-sel' : ''}${blocked ? ' is-blocked' : ''}`}
+                        onClick={() => !blocked && setSelected(p)}
                         disabled={blocked}
-                        onClick={() => { setSelected(p); setSearch(p.name); }}
-                        className={[
-                          'w-full text-left px-3 py-2 text-sm flex justify-between items-center transition-colors',
-                          blocked
-                            ? 'text-[#444] cursor-not-allowed'
-                            : selected?.id === p.id
-                              ? 'bg-[#1e1e1e] text-[#f5c518]'
-                              : 'text-[#ccc] hover:bg-[#161616]',
-                        ].join(' ')}
                       >
-                        <span>{p.name}</span>
-                        <span className={['font-mono text-xs', blocked ? 'text-[#333]' : 'text-[#666]'].join(' ')}>
-                          {p.position}{blocked ? ' ✗' : ''}
-                        </span>
+                        <span className="pi-name">{p.name}</span>
+                        <span className="pi-mlb">{p.mlb_team ?? '—'}</span>
+                        <span className="pi-pos">{p.position}</span>
+                        <TierDots hrs={0} />
                       </button>
                     );
                   })}
                 </div>
               )}
 
-              {/* Confirm button */}
               {selected && (
-                <div className="flex items-center gap-3">
+                <div className="pick-confirm">
                   <button
+                    className="btn-primary btn-big"
                     onClick={submitPick}
                     disabled={loading}
-                    className="px-4 py-2 bg-[#f5c518] text-black font-bold text-sm rounded hover:bg-yellow-400 disabled:opacity-50"
+                    style={{ background: teamColor, borderColor: teamColor }}
                   >
-                    {loading ? 'Picking…' : `Draft ${selected.name} (${selected.position}) for ${currentTeam?.name}`}
+                    {loading ? 'Picking…' : `DRAFT ${selected.name} (${selected.position}) → ${currentTeam?.name}`}
                   </button>
-                  <button
-                    onClick={() => { setSelected(null); setSearch(''); }}
-                    className="text-[#555] text-sm hover:text-[#888]"
-                  >
+                  <button className="btn-ghost" onClick={() => { setSelected(null); setSearch(''); }}>
                     Cancel
                   </button>
                 </div>
               )}
 
               {status && (
-                <div className={['text-sm px-3 py-2 rounded', status.ok ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'].join(' ')}>
-                  {status.msg}
+                <div className={`pick-status ${status.ok ? 'is-ok' : 'is-err'}`}>
+                  <span>{status.ok ? '✓' : '✕'}</span> {status.msg}
                 </div>
               )}
 
-              {/* Re-lock */}
-              <button onClick={() => { setAuthed(false); setPin(''); }} className="text-[#444] text-xs hover:text-[#666]">
-                Lock admin
+              <button
+                onClick={() => { setAuthed(false); setPin(''); }}
+                style={{ background: 'transparent', border: 'none', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--c-textDim)', letterSpacing: '0.1em', cursor: 'pointer', alignSelf: 'flex-start' }}
+              >
+                LOCK ADMIN
               </button>
             </div>
           )}
         </div>
       )}
 
-      {/* Draft board grid */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-xs border-collapse">
-          <thead>
-            <tr>
-              <th className="text-left px-2 py-1.5 text-[#555] font-normal w-8">#</th>
-              {sortedTeams.map(t => (
-                <th
-                  key={t.id}
-                  className={[
-                    'px-2 py-1.5 text-center font-semibold whitespace-nowrap',
-                    currentTeam?.id === t.id ? 'text-[#f5c518]' : 'text-[#888]',
-                  ].join(' ')}
-                >
-                  {t.name}
-                  {currentTeam?.id === t.id && <span className="ml-1">🎯</span>}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {POSITIONS.map(pos => (
-              <tr key={pos} className="border-t border-[#1a1a1a]">
-                <td className="px-2 py-1.5 text-[#555] font-mono">{pos}</td>
-                {sortedTeams.map(t => {
-                  const cell = pickMap.get(`${t.id}:${pos}`);
+      {/* ── Snake board ─────────────────────────────────────────────────── */}
+      <div className="card draft-board-card">
+        <div className="card-head">
+          <h2 className="card-title">Snake Board</h2>
+          <span className="card-sub">{picks.length} OF {totalPicks} PICKS</span>
+        </div>
+        <div className="snake-scroll">
+          <table className="snake">
+            <thead>
+              <tr>
+                <th className="snake-pos-head">POS</th>
+                {sortedTeams.map((t, i) => {
+                  const color = getTeamColor(t.id);
+                  const isOn  = currentTeam?.id === t.id;
                   return (
-                    <td
+                    <th
                       key={t.id}
-                      className={[
-                        'px-2 py-1.5 text-center whitespace-nowrap',
-                        cell ? 'text-[#e8e8e8]' : 'text-[#2a2a2a]',
-                      ].join(' ')}
+                      className={`snake-team${isOn ? ' is-on' : ''}`}
+                      style={{ '--team': color } as React.CSSProperties}
                     >
-                      {cell ? (
-                        <span title={`Pick #${cell.overall_pick}`}>{cell.players?.name ?? '—'}</span>
-                      ) : (
-                        <span>—</span>
-                      )}
-                    </td>
+                      <div className="snake-team-rank">{i + 1}</div>
+                      <div className="snake-team-name">{t.name}</div>
+                    </th>
                   );
                 })}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {POSITIONS.map(pos => (
+                <tr key={pos}>
+                  <td className="snake-pos">{pos}</td>
+                  {sortedTeams.map(t => {
+                    const cell      = pickMap.get(`${t.id}:${pos}`);
+                    const isCurrent = !cell && currentTeam?.id === t.id;
+                    const isNew     = cell ? newPickIds.has(cell.id) : false;
+                    const color     = getTeamColor(t.id);
+                    return (
+                      <td
+                        key={t.id}
+                        className={`snake-cell${cell ? ' has-pick' : ''}${isCurrent ? ' is-current' : ''}${isNew ? ' is-new' : ''}`}
+                        style={isCurrent ? { '--team': color } as React.CSSProperties : {}}
+                      >
+                        {cell ? (
+                          <div className="cell-pick">
+                            <div className="cell-name">{cell.players?.name ?? '—'}</div>
+                            <div className="cell-mlb">{(cell.players as any)?.mlb_team ?? ''}</div>
+                          </div>
+                        ) : isCurrent ? (
+                          <span className="cell-target">▼</span>
+                        ) : (
+                          <span className="cell-empty">—</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Pick log */}
+      {/* ── Pick log ────────────────────────────────────────────────────── */}
       {picks.length > 0 && (
-        <div className="space-y-1">
-          <div className="text-xs text-[#555] uppercase tracking-wide font-semibold px-1">Pick log</div>
-          <div className="max-h-64 overflow-y-auto space-y-0.5">
-            {[...picks].reverse().map(pick => (
-              <div key={pick.id} className="flex items-center gap-2 px-2 py-1 rounded bg-[#0d0d0d] text-xs">
-                <span className="text-[#444] font-mono w-6 text-right">{pick.overall_pick}</span>
-                <span className="text-[#666]">Rd {pick.round}</span>
-                <span className="text-[#f5c518] font-semibold">{pick.teams?.name}</span>
-                <span className="text-[#888]">→</span>
-                <span className="text-[#e8e8e8]">{pick.players?.name}</span>
-                <span className="text-[#555] font-mono ml-auto">{pick.players?.position}</span>
-              </div>
-            ))}
+        <div className="card pick-log">
+          <div className="card-head">
+            <h2 className="card-title">Pick Log</h2>
+            <span className="card-sub">{picks.length} PICKS</span>
+          </div>
+          <div className="log-rows">
+            {[...picks].reverse().map(pick => {
+              const color = getTeamColor(pick.team_id);
+              return (
+                <div key={pick.id} className="log-row" style={{ '--team': color } as React.CSSProperties}>
+                  <span className="log-num">#{String(pick.overall_pick).padStart(3, '0')}</span>
+                  <span className="log-rd">RD{pick.round}.{pick.pick_in_round}</span>
+                  <span className="log-team">{pick.teams?.name}</span>
+                  <span className="log-arrow">→</span>
+                  <span className="log-player">{pick.players?.name}</span>
+                  <span className="log-mlb">{(pick.players as any)?.mlb_team ?? ''}</span>
+                  <span className="log-pos">{pick.players?.position}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

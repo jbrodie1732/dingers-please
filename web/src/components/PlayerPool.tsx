@@ -2,135 +2,109 @@
 
 import { useState, useMemo } from 'react';
 
-type PoolPlayer = {
-  id: string;
-  name: string;
-  position: string;
-  mlb_team: string | null;
+export type PoolPlayer = {
+  id:           string;
+  name:         string;
+  position:     string;
+  mlb_team:     string | null;
   fantasy_team: string | null;
+  total_hrs:    number;
 };
 
 const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
 
+function getTier(hrs: number): number {
+  if (hrs >= 5) return 1;
+  if (hrs >= 3) return 2;
+  if (hrs >= 2) return 3;
+  if (hrs >= 1) return 4;
+  return 5;
+}
+
+function TierDots({ tier }: { tier: number }) {
+  return (
+    <span className="tier-dots">
+      {[1, 2, 3, 4, 5].map(i => (
+        <span key={i} className={`tdot${i <= (6 - tier) ? ' is-on' : ''}`} />
+      ))}
+    </span>
+  );
+}
+
 export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
   const [search,      setSearch]      = useState('');
   const [posFilter,   setPosFilter]   = useState('ALL');
-  const [teamFilter,  setTeamFilter]  = useState('ALL');
   const [draftFilter, setDraftFilter] = useState<'all' | 'available' | 'drafted'>('all');
-
-  const mlbTeams = useMemo(() => {
-    const teams = Array.from(new Set(players.map(p => p.mlb_team).filter(Boolean))) as string[];
-    return teams.sort();
-  }, [players]);
 
   const filtered = useMemo(() => {
     return players.filter(p => {
-      if (posFilter  !== 'ALL' && p.position !== posFilter)  return false;
-      if (teamFilter !== 'ALL' && p.mlb_team !== teamFilter) return false;
-      if (draftFilter === 'available' && p.fantasy_team)  return false;
-      if (draftFilter === 'drafted'   && !p.fantasy_team) return false;
+      if (posFilter   !== 'ALL'       && p.position     !== posFilter)    return false;
+      if (draftFilter === 'available' && p.fantasy_team)                  return false;
+      if (draftFilter === 'drafted'   && !p.fantasy_team)                 return false;
       if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [players, posFilter, teamFilter, draftFilter, search]);
+  }, [players, posFilter, draftFilter, search]);
 
   return (
-    // Outer flex column fills the viewport below the navbar
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 60px)' }}>
-
-      {/* ── Sticky header + filters ── */}
-      <div className="shrink-0 bg-[#0d0d0d] pb-2 space-y-3">
-        <h1 className="text-xl font-bold text-[#f5c518]">🗂️ Player Pool</h1>
-
+    <>
+      <div className="pool-controls">
         <input
-          type="text"
-          placeholder="Search player…"
+          className="pool-search"
+          placeholder="Search batter…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full bg-[#1a1a1a] border border-[#333] rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#f5c518]"
         />
-
-        <div className="flex items-center gap-2">
-          {(['all', 'available', 'drafted'] as const).map(f => (
-            <button
-              key={f}
-              onClick={() => setDraftFilter(f)}
-              className={[
-                'px-3 py-1.5 rounded text-sm transition-colors capitalize',
-                draftFilter === f
-                  ? 'bg-[#f5c518] text-black font-semibold'
-                  : 'bg-[#1a1a1a] text-[#888] hover:text-[#ccc]',
-              ].join(' ')}
-            >
-              {f}
-            </button>
-          ))}
-          <span className="text-[#555] text-xs ml-2">{filtered.length}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div className="seg">
+            {(['all', 'available', 'drafted'] as const).map(s => (
+              <button key={s} className={`seg-btn${draftFilter === s ? ' is-on' : ''}`} onClick={() => setDraftFilter(s)}>
+                {s}
+              </button>
+            ))}
+          </div>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--c-textDim)' }}>
+            {filtered.length} players
+          </span>
         </div>
-
-        <div className="flex gap-1 overflow-x-auto pb-0.5 no-scrollbar">
+        <div className="pos-filters">
           {['ALL', ...POSITIONS].map(pos => (
-            <button
-              key={pos}
-              onClick={() => setPosFilter(pos)}
-              className={[
-                'px-2 py-0.5 rounded text-xs font-mono transition-colors shrink-0',
-                posFilter === pos
-                  ? 'bg-[#f5c518] text-black font-bold'
-                  : 'bg-[#1a1a1a] text-[#888] hover:bg-[#222] hover:text-[#ccc]',
-              ].join(' ')}
-            >
+            <button key={pos} className={`posbtn${posFilter === pos ? ' is-on' : ''}`} onClick={() => setPosFilter(pos)}>
               {pos}
             </button>
           ))}
         </div>
+      </div>
 
-        <div className="flex justify-center items-center gap-2">
-          <span className="text-[#555] text-xs">MLB Team:</span>
-          <select
-            value={teamFilter}
-            onChange={e => setTeamFilter(e.target.value)}
-            className="bg-[#1a1a1a] border border-[#333] rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-[#f5c518]"
-          >
-            <option value="ALL">All</option>
-            {mlbTeams.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
+      <div className="card pool-table">
+        <div className="ptbl-row ptbl-head">
+          <div className="ptbl-c c-name">PLAYER</div>
+          <div className="ptbl-c c-pos">POS</div>
+          <div className="ptbl-c c-mlb">MLB</div>
+          <div className="ptbl-c c-tier">TIER</div>
+          <div className="ptbl-c c-hrs">HRS</div>
+          <div className="ptbl-c c-squad">SQUAD</div>
         </div>
+        {filtered.length === 0 ? (
+          <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--c-textDim)', letterSpacing: '0.1em' }}>
+            NO PLAYERS MATCH YOUR FILTERS
+          </div>
+        ) : filtered.slice(0, 300).map(p => (
+          <div key={p.id} className={`ptbl-row${p.fantasy_team ? ' is-drafted' : ''}`}>
+            <div className="ptbl-c c-name">{p.name}</div>
+            <div className="ptbl-c c-pos"><span className="pos-tag">{p.position}</span></div>
+            <div className="ptbl-c c-mlb">{p.mlb_team ?? '—'}</div>
+            <div className="ptbl-c c-tier"><TierDots tier={getTier(p.total_hrs)} /></div>
+            <div className="ptbl-c c-hrs">{p.total_hrs > 0 ? p.total_hrs : '—'}</div>
+            <div className="ptbl-c c-squad">
+              {p.fantasy_team
+                ? <span className="squad-on">{p.fantasy_team}</span>
+                : <span className="squad-off">undrafted</span>
+              }
+            </div>
+          </div>
+        ))}
       </div>
-
-      {/* ── Scrollable table ── */}
-      <div className="overflow-y-auto flex-1 overflow-x-auto">
-        <table className="min-w-full text-sm border-collapse">
-          <thead className="sticky top-0 z-10 bg-[#0d0d0d]">
-            <tr className="border-b border-[#2a2a2a]">
-              <th className="text-left px-3 py-2 text-[#555] font-normal">Player</th>
-              <th className="text-left px-3 py-2 text-[#555] font-normal w-16">Pos</th>
-              <th className="text-left px-3 py-2 text-[#555] font-normal w-16">Team</th>
-              <th className="text-left px-3 py-2 text-[#555] font-normal">Squad</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-3 py-4 text-[#555] text-center">No players match your filters</td>
-              </tr>
-            )}
-            {filtered.map(p => (
-              <tr key={p.id} className="border-b border-[#111] hover:bg-[#111]">
-                <td className="px-3 py-2 text-[#e8e8e8]">{p.name}</td>
-                <td className="px-3 py-2 text-[#888] font-mono">{p.position}</td>
-                <td className="px-3 py-2 text-[#888] font-mono">{p.mlb_team ?? '—'}</td>
-                <td className="px-3 py-2">
-                  {p.fantasy_team
-                    ? <span className="text-[#f5c518] text-xs font-semibold">{p.fantasy_team}</span>
-                    : <span className="text-[#333] text-xs">—</span>
-                  }
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    </>
   );
 }

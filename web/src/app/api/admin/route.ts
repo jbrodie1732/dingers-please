@@ -131,5 +131,37 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  // ── log-hr ───────────────────────────────────────────────────────────────
+  if (action === 'log-hr') {
+    const { playerName, teamId, distance, launchSpeed, launchAngle } = body;
+    if (!playerName?.trim() || !teamId) {
+      return NextResponse.json({ error: 'Player name and team required' }, { status: 400 });
+    }
+    const { data: player, error: findErr } = await db
+      .from('players')
+      .select('id, name, position')
+      .eq('team_id', teamId)
+      .ilike('name', `%${playerName.trim()}%`)
+      .is('dropped_at', null)
+      .limit(1)
+      .single();
+    if (findErr || !player) {
+      return NextResponse.json({ error: `No active player matching "${playerName}" on that team` }, { status: 400 });
+    }
+    const now = new Date().toISOString();
+    const { error: insertErr } = await db.from('home_runs').insert({
+      player_id:    player.id,
+      game_pk:      Math.floor(Date.now() / 1000),
+      at_bat_index: 0,
+      distance:     distance || null,
+      launch_speed: launchSpeed || null,
+      launch_angle: launchAngle || null,
+      game_date:    now.slice(0, 10),
+      hit_at:       now,
+    });
+    if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
+    return NextResponse.json({ success: true, message: `HR logged for ${player.name} (${player.position}).` });
+  }
+
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }

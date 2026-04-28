@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { HomeRun } from '@/lib/types';
+import { getTeamColor } from '@/lib/types';
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -14,34 +15,49 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function HRCard({ hr, fresh }: { hr: HomeRun; fresh?: boolean }) {
+function FeedRow({ hr, fresh }: { hr: HomeRun; fresh?: boolean }) {
   const player   = hr.players;
-  const team     = player?.teams?.name || '?';
-  const distStr  = hr.distance != null ? `${hr.distance} ft` : '';
-  const label    = hr.mickey_meter_label;
+  const teamName = player?.teams?.name ?? '?';
+  const teamId   = (player as any)?.team_id as string | undefined;
+  const color    = teamId ? getTeamColor(teamId) : 'var(--c-textDim)';
+
+  const label = hr.mickey_meter_label;
+  const count = hr.mickey_meter_count;
+  const isLegit = label?.toUpperCase().includes('LEGIT');
 
   return (
-    <div className={[
-      'border rounded-lg p-3 transition-all duration-500',
-      fresh
-        ? 'border-[#f5c518] bg-[#1a1800]'
-        : 'border-[#2a2a2a] bg-[#161616]',
-    ].join(' ')}>
-      <div className="flex justify-between items-start gap-2">
-        <div className="min-w-0">
-          <div className="font-semibold text-sm truncate">{player?.name}</div>
-          <div className="text-xs text-[#888] mt-0.5">
-            {team}
-            {distStr && <span className="ml-2 text-[#f5c518]">· {distStr}</span>}
-          </div>
+    <div
+      className={`feed-row${fresh ? ' is-fresh' : ''}`}
+      style={{ '--team': color } as React.CSSProperties}
+    >
+      <div className="feed-bar" />
+      <div className="feed-main">
+        <div className="feed-row1">
+          <span className="feed-name">{player?.name ?? '—'}</span>
+          {player?.position && <span className="feed-pos">{player.position}</span>}
+          <span className="feed-ago">{timeAgo(hr.hit_at)}</span>
         </div>
-        <div className="text-xs text-[#666] whitespace-nowrap shrink-0">
-          {timeAgo(hr.hit_at)}
+        <div className="feed-row2">
+          <span className="feed-team">{teamName}</span>
+          {hr.distance != null && (
+            <>
+              <span className="feed-divider">·</span>
+              <span className="feed-dist">{hr.distance} ft</span>
+            </>
+          )}
+          {hr.launch_speed != null && (
+            <>
+              <span className="feed-divider">·</span>
+              <span className="feed-ev">{hr.launch_speed} mph</span>
+            </>
+          )}
+          {label && count != null && (
+            <span className={`feed-mickey ${isLegit ? 'is-legit' : 'is-mouse'}`}>
+              {isLegit ? 'LEGIT' : 'MICKEY'} {count}/30
+            </span>
+          )}
         </div>
       </div>
-      {label && (
-        <div className="mt-1.5 text-[10px] text-[#666] italic truncate">{label}</div>
-      )}
     </div>
   );
 }
@@ -57,49 +73,46 @@ export default function RealtimeFeed({ initialHRs }: Props) {
   useEffect(() => {
     const channel = supabase
       .channel('feed_insert')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'home_runs' },
-        async (payload) => {
-          // Fetch the full row with player/team joins
-          const { data } = await supabase
-            .from('home_runs')
-            .select('*, players(name, position, teams(name))')
-            .eq('id', payload.new.id)
-            .single();
-          if (data) {
-            setHrs(prev => [data, ...prev].slice(0, 15));
-            setFresh(data.id);
-            setTimeout(() => setFresh(null), 5000);
-          }
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'home_runs' }, async (payload) => {
+        const { data } = await supabase
+          .from('home_runs')
+          .select('*, players(name, position, team_id, teams(name))')
+          .eq('id', payload.new.id)
+          .single();
+        if (data) {
+          setHrs(prev => [data, ...prev].slice(0, 15));
+          setFresh(data.id);
+          setTimeout(() => setFresh(null), 5000);
         }
-      )
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, []);
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Recent Dingers</h2>
-        <span className="flex items-center gap-1.5 text-xs text-[#888]">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-          live
-        </span>
+    <section className="card card-feed">
+      <div className="card-head">
+        <div className="card-head-l">
+          <h2 className="card-title">Live Feed</h2>
+        </div>
+        <div className="card-head-r">
+          <span className="livepill livepill-sm">
+            <span className="livedot" />
+            <span>LIVE</span>
+          </span>
+        </div>
       </div>
 
       {hrs.length === 0 ? (
-        <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-6 text-center text-[#555] text-sm">
-          No HRs yet. Season starts soon!
-        </div>
+        <div className="feed-empty">NO DINGERS YET</div>
       ) : (
-        <div className="space-y-2">
-          {hrs.map(hr => (
-            <HRCard key={hr.id} hr={hr} fresh={hr.id === freshId} />
+        <div className="feed-list">
+          {hrs.slice(0, 12).map(hr => (
+            <FeedRow key={hr.id} hr={hr} fresh={hr.id === freshId} />
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }
