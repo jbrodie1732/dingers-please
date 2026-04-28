@@ -2,8 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Doto (not yet in next/font) */
-@import url('https://fonts.googleapis.com/css2?family=Doto:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Big+Shoulders+Display:wght@600;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Doto:wght@400;700;900&family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Oswald:wght@500;700&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400;700&family=VT323&display=swap');
 
 /* ─── Design tokens ──────────────────────────────────────────────────────────── */
 :root {
@@ -25,7 +24,7 @@
 
   /* Font families — overridden in layout.tsx via next/font variables */
   --font-display:        "Bricolage Grotesque", system-ui, sans-serif;
-  --font-ui:             "Inter", system-ui, sans-serif;
+  --font-ui:             "Geist", "Inter", sans-serif;
   --font-mono:           "DM Mono", ui-monospace, monospace;
   --font-digital:        "Doto", ui-monospace, monospace;
   --font-display-weight: 800;
@@ -1179,3 +1178,68 @@ body::before {
   background: var(--c-surfaceHi); padding: 2px 5px; border-radius: 3px; margin-left: auto;
 }
 .log-mlb        { font-family: var(--font-mono); font-size: 10px; color: var(--c-textMuted); }
+
+/* ─── HR Celebration Toast ──────────────────────────────────────────────────── */
+.toast {
+  position: fixed; top: 80px; right: 24px; z-index: 1000;
+  width: 380px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-borderHi);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02);
+  animation: toastIn 0.5s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes toastIn {
+  from { transform: translateX(420px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+.toast-bar {
+  width: 6px;
+  background: var(--team);
+  box-shadow: inset 0 0 16px rgba(0,0,0,0.3), 0 0 24px var(--team);
+  flex-shrink: 0;
+}
+.toast-body { flex: 1; padding: 14px 16px; min-width: 0; }
+.toast-row1 { display: flex; align-items: center; justify-content: space-between; }
+.toast-eyebrow {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.18em; color: var(--c-accent);
+}
+.toast-x {
+  background: transparent; border: 0; color: var(--c-textDim);
+  cursor: pointer; padding: 0; width: 22px; height: 22px;
+  font-size: 16px; line-height: 1;
+}
+.toast-x:hover { color: var(--c-text); }
+.toast-name {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 22px; line-height: 1.1; margin-top: 4px;
+  color: var(--c-bone); letter-spacing: -0.01em;
+}
+.toast-team { color: var(--team); font-weight: 600; font-size: 12px; margin-top: 2px; }
+.toast-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 8px; margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--c-border);
+}
+.stat { display: flex; flex-direction: column; gap: 2px; }
+.stat-label {
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.14em; color: var(--c-textDim);
+}
+.stat-value {
+  font-family: var(--font-digital); font-weight: 700;
+  font-size: 18px; color: var(--c-bone);
+  letter-spacing: 0.02em;
+}
+.mickey-tag {
+  display: inline-flex; align-items: baseline; gap: 1px;
+  font-family: var(--font-mono); font-weight: 700;
+  padding: 2px 5px; border-radius: 3px;
+  font-size: 13px;
+}
+.mickey-tag.is-legit { background: rgba(91,194,114,0.18); color: var(--c-legit); }
+.mickey-tag.is-mouse { background: rgba(232,105,60,0.18); color: var(--c-mickey); }
+.mickey-of { font-size: 9px; opacity: 0.7; }

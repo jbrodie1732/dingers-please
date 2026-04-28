@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Bricolage_Grotesque, DM_Mono, Inter } from 'next/font/google';
 import './globals.css';
 import NavBar from '@/components/NavBar';
+import LiveAlerts from '@/components/LiveAlerts';
 
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -36,13 +37,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={[bricolage.variable, dmMono.variable, inter.variable].join(' ')}
       style={{
         '--font-display': 'var(--font-bricolage)',
-        '--font-ui':      'var(--font-inter)',
+        '--font-ui':      '"Geist", var(--font-inter), sans-serif',
         '--font-mono':    'var(--font-dm-mono)',
         '--font-digital': '"Doto", ui-monospace, monospace',
       } as React.CSSProperties}
     >
       <body>
         <NavBar />
+        <LiveAlerts />
         <main className="main-pane">
           {children}
         </main>
