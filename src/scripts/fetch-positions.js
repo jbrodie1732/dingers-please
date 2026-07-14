@@ -1,6 +1,12 @@
 // fetch-positions.js
+// SUPERSEDED: the draft tool and load-player-pool.js now read player pool
+// data (including position) directly from data/dingers_player_data.xlsx —
+// see src/lib/playerData.js. This script is kept around in case you need to
+// regenerate a positions.csv for some other purpose, but it's no longer part
+// of the normal setup flow.
+//
 // Fetches the Baseball Reference fielding appearances page for the current season
-// and outputs data/positions.csv — which the draft tool reads to determine position eligibility.
+// and outputs data/positions.csv.
 //
 // Usage:
 //   node src/scripts/fetch-positions.js            # fetches live from Baseball Reference

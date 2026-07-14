@@ -7,7 +7,7 @@
 ```
 /Users/joshbrodie/Desktop/claude_code/dingers/
 ├── config/draft.config.js     ← teams, draft order, season year
-├── data/positions.csv         ← 827-player pool (from Baseball Reference)
+├── data/dingers_player_data.xlsx ← player pool (MAIN tab: MLB IDs, Statcast names, HRs, team, position)
 ├── ecosystem.config.js        ← PM2 process config
 ├── src/
 │   ├── watcher/               ← live game poller
@@ -27,12 +27,16 @@ In Supabase SQL editor, run these in order:
 - `supabase/schema.sql` — base tables + views + RLS
 - `supabase/migrations/002_add_drop_naming.sql` — add/drop support + season_config
 - `supabase/migrations/003_draft_web.sql` — draft_position column + realtime
+- `supabase/migrations/004_mlb_team.sql` — mlb_team column
+- `supabase/migrations/005_preseason_hrs.sql` — preseason_hrs column (pre-draft season HR reference stat)
 
 ### 3. Load the player pool
+Make sure `data/dingers_player_data.xlsx` is present (MAIN tab is the source of truth — mlb_player_ID, mlb_statcast_name, DraftBuddy Name, Team, HR, Pos). This replaces the old `fetch-positions.js` → `positions.csv` scrape flow; that script is still in the repo but no longer part of the normal setup path.
+
 ```bash
 npm run load-player-pool
 ```
-Upserts all 10 teams (with draft positions) + inserts 827 players with `team_id = null`.
+Upserts all 10 teams (with draft positions) + inserts players with `team_id = null`, including their MLB Statcast player ID, Statcast naming convention (both used for reliable live-game name matching — no need to run `fetch-mlb-ids` before the draft anymore, since IDs are already in the workbook), team abbreviation, position, and pre-draft season HR total.
 
 ### 4. Set web env vars
 Copy `web/.env.local.example` → `web/.env.local` and fill in:
@@ -58,7 +62,7 @@ The draft lives at **`/draft`** on the web app. Everyone can view it live; only 
 - A team can't draft a position they already own
 - Can't draft an already-drafted player
 
-**After the real draft** — run this to link MLB player IDs for accurate name matching during the season:
+**After the real draft** — MLB player IDs are now pre-loaded from `dingers_player_data.xlsx`, so this step is usually unnecessary. Only run it if a drafted player is missing an ID (e.g. a late add not in the original workbook):
 ```bash
 npm run fetch-mlb-ids:save
 ```

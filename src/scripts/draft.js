@@ -3,37 +3,43 @@
 //
 // Before running:
 //   1. Edit config/draft.config.js with your teams in draft order
-//   2. Run `node src/scripts/fetch-positions.js` to generate data/positions.csv
+//   2. Make sure data/dingers_player_data.xlsx exists (MAIN tab = player pool)
 //   3. Make sure your .env is configured with Supabase credentials
+//
+// NOTE: the real draft-day flow for this league happens on the web app's
+// /draft page (see OPERATIONS.md) — this CLI is kept as an alternate/offline
+// path and reads from the same workbook as load-player-pool.js.
 
 require('dotenv').config();
 const inquirer = require('inquirer');
 const chalk    = require('chalk');
-const fs       = require('fs');
-const path     = require('path');
 const { upsertTeam, insertPlayer, insertDraftPick, getAllTeams } = require('../db/queries');
+const { loadPlayerPool, WORKBOOK_PATH } = require('../lib/playerData');
 
-const DRAFT_CFG      = require('../../config/draft.config');
-const POSITIONS_PATH = path.join(__dirname, '../../data/positions.csv');
+const DRAFT_CFG = require('../../config/draft.config');
 
 const { teams: TEAM_NAMES, rounds: ROUNDS, positions: POSITIONS, season: SEASON } = DRAFT_CFG;
 
-// ---- Load position eligibility from CSV ----
+// ---- Load position eligibility from the player data workbook ----
 function loadPositions() {
-  if (!fs.existsSync(POSITIONS_PATH)) {
-    console.error(chalk.red(`\n❌ positions.csv not found at ${POSITIONS_PATH}`));
-    console.error(chalk.yellow('Run: node src/scripts/fetch-positions.js\n'));
+  let players;
+  try {
+    ({ players } = loadPlayerPool());
+  } catch (err) {
+    console.error(chalk.red(`\n❌ Could not load player data: ${err.message}`));
+    console.error(chalk.yellow(`Expected workbook at ${WORKBOOK_PATH}\n`));
     process.exit(1);
   }
-  const lines  = fs.readFileSync(POSITIONS_PATH, 'utf8').split('\n').filter(Boolean);
-  const header = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-  const map    = new Map();
-  for (const line of lines.slice(1)) {
-    const cols = line.split(',').map(c => c.replace(/"/g, '').trim());
-    const row  = Object.fromEntries(header.map((h, i) => [h, cols[i]]));
-    if (row.name) map.set(row.name.toLowerCase(), row);
+  const map = new Map();
+  for (const p of players) {
+    map.set(p.name.toLowerCase(), {
+      name:             p.name,
+      primary_position: p.position,
+      mlb_team:         p.mlb_team,
+      mlb_player_id:    p.mlb_player_id,
+    });
   }
-  return map;  // Map<lowercaseName, { name, primary_position, mlb_team }>
+  return map;  // Map<lowercaseName, { name, primary_position, mlb_team, mlb_player_id }>
 }
 
 // ---- Snake draft order ----
@@ -133,7 +139,7 @@ async function main() {
 
       if (!player) {
         console.log(chalk.red(`  Player "${input}" not found in positions data.`));
-        console.log(chalk.gray('  Try a different spelling, or check data/positions.csv.'));
+        console.log(chalk.gray('  Try a different spelling, or check data/dingers_player_data.xlsx.'));
         continue;
       }
 
@@ -168,7 +174,8 @@ async function main() {
           name:          player.name,
           team_id:       teamIdMap[teamName],
           position:      pos,
-          mlb_player_id: null,
+          mlb_player_id: player.mlb_player_id ?? null,
+          mlb_team:      player.mlb_team ?? null,
         });
         await insertDraftPick({
           season:        SEASON,

@@ -3,31 +3,52 @@
 import { useState, useMemo } from 'react';
 
 export type PoolPlayer = {
-  id:           string;
-  name:         string;
-  position:     string;
-  mlb_team:     string | null;
-  fantasy_team: string | null;
-  total_hrs:    number;
+  id:            string;
+  name:          string;
+  position:      string;
+  mlb_team:      string | null;
+  fantasy_team:  string | null;
+  total_hrs:     number;
+  preseason_hrs: number;
 };
 
 const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
 
-function getTier(hrs: number): number {
-  if (hrs >= 5) return 1;
-  if (hrs >= 3) return 2;
-  if (hrs >= 2) return 3;
-  if (hrs >= 1) return 4;
-  return 5;
-}
+type SortKey = 'name' | 'position' | 'mlb_team' | 'preseason_hrs' | 'total_hrs' | 'fantasy_team';
+type SortDir = 'asc' | 'desc';
 
-function TierDots({ tier }: { tier: number }) {
+// Numeric columns default to descending (highest first); text columns default
+// to ascending (A→Z) the first time you click them.
+const DEFAULT_DIR: Record<SortKey, SortDir> = {
+  name:          'asc',
+  position:      'asc',
+  mlb_team:      'asc',
+  preseason_hrs: 'desc',
+  total_hrs:     'desc',
+  fantasy_team:  'asc',
+};
+
+function SortHeader({
+  label, sortKey, activeKey, dir, onClick, className,
+}: {
+  label:     string;
+  sortKey:   SortKey;
+  activeKey: SortKey;
+  dir:       SortDir;
+  onClick:   (key: SortKey) => void;
+  className: string;
+}) {
+  const isActive = activeKey === sortKey;
   return (
-    <span className="tier-dots">
-      {[1, 2, 3, 4, 5].map(i => (
-        <span key={i} className={`tdot${i <= (6 - tier) ? ' is-on' : ''}`} />
-      ))}
-    </span>
+    <div
+      className={`ptbl-c ${className} ptbl-sort${isActive ? ' is-active' : ''}`}
+      onClick={() => onClick(sortKey)}
+      role="button"
+      tabIndex={0}
+    >
+      {label}
+      {isActive && <span className="ptbl-sort-arrow">{dir === 'asc' ? '▲' : '▼'}</span>}
+    </div>
   );
 }
 
@@ -35,6 +56,17 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
   const [search,      setSearch]      = useState('');
   const [posFilter,   setPosFilter]   = useState('ALL');
   const [draftFilter, setDraftFilter] = useState<'all' | 'available' | 'drafted'>('all');
+  const [sortKey,      setSortKey]    = useState<SortKey>('preseason_hrs');
+  const [sortDir,      setSortDir]    = useState<SortDir>('desc');
+
+  function handleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir(DEFAULT_DIR[key]);
+    }
+  }
 
   const filtered = useMemo(() => {
     return players.filter(p => {
@@ -45,6 +77,22 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
       return true;
     });
   }, [players, posFilter, draftFilter, search]);
+
+  const sorted = useMemo(() => {
+    const list = [...filtered];
+    const mul  = sortDir === 'asc' ? 1 : -1;
+    list.sort((a, b) => {
+      const av = a[sortKey];
+      const bv = b[sortKey];
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * mul;
+      const as = (av ?? '').toString().toLowerCase();
+      const bs = (bv ?? '').toString().toLowerCase();
+      if (as < bs) return -1 * mul;
+      if (as > bs) return  1 * mul;
+      return 0;
+    });
+    return list;
+  }, [filtered, sortKey, sortDir]);
 
   return (
     <>
@@ -78,23 +126,23 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
 
       <div className="card pool-table">
         <div className="ptbl-row ptbl-head">
-          <div className="ptbl-c c-name">PLAYER</div>
-          <div className="ptbl-c c-pos">POS</div>
-          <div className="ptbl-c c-mlb">MLB</div>
-          <div className="ptbl-c c-tier">TIER</div>
-          <div className="ptbl-c c-hrs">HRS</div>
-          <div className="ptbl-c c-squad">SQUAD</div>
+          <SortHeader label="PLAYER" sortKey="name"          activeKey={sortKey} dir={sortDir} onClick={handleSort} className="c-name" />
+          <SortHeader label="POS"    sortKey="position"      activeKey={sortKey} dir={sortDir} onClick={handleSort} className="c-pos" />
+          <SortHeader label="MLB"    sortKey="mlb_team"      activeKey={sortKey} dir={sortDir} onClick={handleSort} className="c-mlb" />
+          <SortHeader label="2026 HR" sortKey="preseason_hrs" activeKey={sortKey} dir={sortDir} onClick={handleSort} className="c-preseason-hrs" />
+          <SortHeader label="POOL"   sortKey="total_hrs"     activeKey={sortKey} dir={sortDir} onClick={handleSort} className="c-hrs" />
+          <SortHeader label="SQUAD"  sortKey="fantasy_team"  activeKey={sortKey} dir={sortDir} onClick={handleSort} className="c-squad" />
         </div>
-        {filtered.length === 0 ? (
+        {sorted.length === 0 ? (
           <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--c-textDim)', letterSpacing: '0.1em' }}>
             NO PLAYERS MATCH YOUR FILTERS
           </div>
-        ) : filtered.slice(0, 300).map(p => (
+        ) : sorted.slice(0, 300).map(p => (
           <div key={p.id} className={`ptbl-row${p.fantasy_team ? ' is-drafted' : ''}`}>
             <div className="ptbl-c c-name">{p.name}</div>
             <div className="ptbl-c c-pos"><span className="pos-tag">{p.position}</span></div>
             <div className="ptbl-c c-mlb">{p.mlb_team ?? '—'}</div>
-            <div className="ptbl-c c-tier"><TierDots tier={getTier(p.total_hrs)} /></div>
+            <div className="ptbl-c c-preseason-hrs">{p.preseason_hrs > 0 ? p.preseason_hrs : '—'}</div>
             <div className="ptbl-c c-hrs">{p.total_hrs > 0 ? p.total_hrs : '—'}</div>
             <div className="ptbl-c c-squad">
               {p.fantasy_team

@@ -127,10 +127,10 @@ async function upsertTeam(name) {
 }
 
 // Insert a player.
-async function insertPlayer({ name, team_id, position, mlb_player_id }) {
+async function insertPlayer({ name, team_id, position, mlb_player_id, mlb_team, mlb_api_name, preseason_hrs }) {
   const { data, error } = await supabase
     .from('players')
-    .insert({ name, team_id, position, mlb_player_id })
+    .insert({ name, team_id, position, mlb_player_id, mlb_team, mlb_api_name, preseason_hrs })
     .select()
     .single();
   if (error) throw new Error(`insertPlayer failed: ${error.message}`);

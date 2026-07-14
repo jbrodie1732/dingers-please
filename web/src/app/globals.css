@@ -768,7 +768,7 @@ body::before {
 .pool-table { }
 .ptbl-row {
   display: grid;
-  grid-template-columns: 2fr 60px 70px 80px 60px 1.4fr;
+  grid-template-columns: 2fr 60px 70px 92px 86px 1.2fr;
   align-items: center; padding: 10px 18px;
   border-bottom: 1px solid var(--c-border); transition: background 0.15s;
 }
@@ -780,18 +780,23 @@ body::before {
   color: var(--c-textDim); position: sticky; top: 0; z-index: 2;
 }
 .ptbl-c   { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ptbl-sort {
+  cursor: pointer; user-select: none; display: flex; align-items: center; gap: 4px;
+  transition: color 120ms;
+}
+.ptbl-sort:hover { color: var(--c-text); }
+.ptbl-sort.is-active { color: var(--c-accent); }
+.ptbl-sort-arrow { font-size: 8px; opacity: 0.8; }
 .c-name   { font-size: 14px; font-weight: 500; color: var(--c-text); }
 .c-mlb    { font-family: var(--font-mono); font-size: 11px; color: var(--c-textMuted); }
-.c-hrs    { font-family: var(--font-digital); font-size: 18px; font-weight: 700; color: var(--c-bone); }
+.c-preseason-hrs { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--c-bone); }
+.c-hrs    { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--c-bone); }
 .ptbl-row.is-drafted .c-name { color: var(--c-textMuted); }
 .pos-tag  {
   font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em;
   background: var(--c-surfaceHi); border: 1px solid var(--c-border);
   color: var(--c-textMuted); padding: 2px 6px; border-radius: 3px;
 }
-.tier-dots { display: inline-flex; gap: 3px; align-items: center; }
-.tdot      { width: 7px; height: 7px; border-radius: 50%; background: var(--c-border); }
-.tdot.is-on { background: var(--c-accent); box-shadow: 0 0 4px var(--c-accent); }
 .squad-on  { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--c-accent); }
 .squad-off { font-family: var(--font-mono); font-size: 11px; color: var(--c-textDim); }
 

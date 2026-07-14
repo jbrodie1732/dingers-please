@@ -15,7 +15,7 @@ export default async function PoolPage() {
   const db = serverClient();
 
   const [{ data }, { data: hrData }] = await Promise.all([
-    db.from('players').select('id, name, position, mlb_team, teams(name)').order('name'),
+    db.from('players').select('id, name, position, mlb_team, preseason_hrs, teams(name)').order('name'),
     db.from('player_standings').select('player_id, total_hrs'),
   ]);
 
@@ -25,12 +25,13 @@ export default async function PoolPage() {
   }
 
   const players: PoolPlayer[] = ((data ?? []) as any[]).map(p => ({
-    id:           p.id,
-    name:         p.name,
-    position:     p.position,
-    mlb_team:     p.mlb_team ?? null,
-    fantasy_team: p.teams?.name ?? null,
-    total_hrs:    hrsByPlayerId[p.id] ?? 0,
+    id:            p.id,
+    name:          p.name,
+    position:      p.position,
+    mlb_team:      p.mlb_team ?? null,
+    fantasy_team:  p.teams?.name ?? null,
+    total_hrs:     hrsByPlayerId[p.id] ?? 0,
+    preseason_hrs: p.preseason_hrs ?? 0,
   }));
 
   return (

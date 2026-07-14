@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(npx next *)",
+      "Bash(git push *)",
+      "Bash(npx vercel *)",
+      "Read(//tmp/**)",
+      "Bash(curl *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}
