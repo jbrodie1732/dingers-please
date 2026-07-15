@@ -16,7 +16,7 @@ async function getStandings(): Promise<TeamStanding[]> {
 async function getRecentHRs(): Promise<HomeRun[]> {
   const { data } = await supabase
     .from('home_runs')
-    .select('*, players(name, position, team_id, teams(name))')
+    .select('*, players(name, position, team_id, teams(name, draft_position))')
     .order('hit_at', { ascending: false })
     .limit(15);
   return data || [];

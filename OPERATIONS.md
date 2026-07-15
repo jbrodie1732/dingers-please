@@ -29,6 +29,7 @@ In Supabase SQL editor, run these in order:
 - `supabase/migrations/003_draft_web.sql` — draft_position column + realtime
 - `supabase/migrations/004_mlb_team.sql` — mlb_team column
 - `supabase/migrations/005_preseason_hrs.sql` — preseason_hrs column (pre-draft season HR reference stat)
+- `supabase/migrations/006_team_colors.sql` — adds draft_position to team_standings/daily_team_hrs (stable per-team color assignment)
 
 ### 3. Load the player pool
 Make sure `data/dingers_player_data.xlsx` is present (MAIN tab is the source of truth — mlb_player_ID, mlb_statcast_name, DraftBuddy Name, Team, HR, Pos). This replaces the old `fetch-positions.js` → `positions.csv` scrape flow; that script is still in the repo but no longer part of the normal setup path.

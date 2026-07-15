@@ -406,15 +406,15 @@ export default function TimelineChart({ dailyData, hourlyHRs }: Props) {
   const [hover, setHover] = useState<string | null>(null);
 
   const teams = useMemo<Team[]>(() => {
-    const map = new Map<string, { id: string; name: string; total: number }>();
+    const map = new Map<string, { id: string; name: string; total: number; draft_position: number | null }>();
     for (const r of dailyData) {
-      const t = map.get(r.team_id) ?? { id: r.team_id, name: r.team_name, total: 0 };
+      const t = map.get(r.team_id) ?? { id: r.team_id, name: r.team_name, total: 0, draft_position: r.draft_position };
       t.total += r.daily_hrs;
       map.set(r.team_id, t);
     }
     return Array.from(map.values())
       .sort((a, b) => b.total - a.total)
-      .map(t => ({ id: t.id, name: t.name, color: getTeamColor(t.id) }));
+      .map(t => ({ id: t.id, name: t.name, color: getTeamColor(t.id, t.draft_position) }));
   }, [dailyData]);
 
   const { dates, staticSeries, teamTotals } = useMemo(() => {

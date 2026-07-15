@@ -373,7 +373,7 @@ export default function HeadToHead({ daily, standings, hourlyHRs }: Props) {
     standings.map(s => ({
       id:    s.team_id,
       name:  s.team_name,
-      color: getTeamColor(s.team_id),
+      color: getTeamColor(s.team_id, s.draft_position),
       total: s.total_hrs,
     }))
   , [standings]);

@@ -65,7 +65,7 @@ export default function StandingsTable({ initialStandings }: Props) {
         </div>
 
         {sorted.map((t, i) => {
-          const color   = getTeamColor(t.team_id);
+          const color   = getTeamColor(t.team_id, t.draft_position);
           const gap     = (leader?.total_hrs ?? 0) - t.total_hrs;
           const pct     = t.total_hrs / max;
           const isLeader = i === 0;

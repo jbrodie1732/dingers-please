@@ -246,7 +246,7 @@ export default function AdminPanel() {
                   const b    = teamBudgets[t.id];
                   const out  = b ? b.used >= b.limit : false;
                   const isOn = selectedTeam?.id === t.id;
-                  const color = getTeamColor(t.id);
+                  const color = getTeamColor(t.id, t.draft_position);
                   return (
                     <button
                       key={t.id}
@@ -309,7 +309,7 @@ export default function AdminPanel() {
                   </label>
                   <button
                     className="addrop-submit"
-                    style={{ background: getTeamColor(selectedTeam.id) }}
+                    style={{ background: getTeamColor(selectedTeam.id, selectedTeam.draft_position) }}
                     onClick={submitAddDrop}
                     disabled={!addName.trim() || loading}
                   >

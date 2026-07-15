@@ -8,7 +8,7 @@ async function getData() {
   const [{ data: hrs }, { data: standings }] = await Promise.all([
     supabase
       .from('home_runs')
-      .select('*, players(name, position, team_id, teams(name))')
+      .select('*, players(name, position, team_id, teams(name, draft_position))')
       .not('spray_x', 'is', null)
       .not('spray_y', 'is', null),
     supabase.from('team_standings').select('*').order('total_hrs', { ascending: false }),

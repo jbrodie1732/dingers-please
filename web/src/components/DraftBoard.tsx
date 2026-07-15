@@ -75,7 +75,7 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
       const [{ data: freshPicks }, { data: freshPlayers }] = await Promise.all([
         supabase
           .from('draft_picks')
-          .select('*, players(id, name, position, mlb_team), teams(id, name)')
+          .select('*, players(id, name, position, mlb_team), teams(id, name, draft_position)')
           .eq('season', 2026)
           .order('overall_pick'),
         supabase
@@ -100,7 +100,7 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
   const refreshPick = useCallback(async (newPick: DraftPick) => {
     const { data } = await supabase
       .from('draft_picks')
-      .select('*, players(id, name, position, mlb_team), teams(id, name)')
+      .select('*, players(id, name, position, mlb_team), teams(id, name, draft_position)')
       .eq('id', newPick.id)
       .single();
     if (data) {
@@ -133,7 +133,7 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
   const isDraftDone = currentIdx >= pickOrder.length;
   const currentPick = isDraftDone ? null : pickOrder[currentIdx];
   const currentTeam = currentPick ? sortedTeams[currentPick.teamIndex] : null;
-  const teamColor   = currentTeam ? getTeamColor(currentTeam.id) : 'var(--c-accent)';
+  const teamColor   = currentTeam ? getTeamColor(currentTeam.id, currentTeam.draft_position) : 'var(--c-accent)';
 
   const takenPositions = new Set(
     currentTeam ? picks.filter(p => p.team_id === currentTeam.id).map(p => p.players?.position).filter(Boolean) as string[] : []
@@ -328,7 +328,7 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
               <tr>
                 <th className="snake-pos-head">POS</th>
                 {sortedTeams.map((t, i) => {
-                  const color = getTeamColor(t.id);
+                  const color = getTeamColor(t.id, t.draft_position);
                   const isOn  = currentTeam?.id === t.id;
                   return (
                     <th
@@ -351,7 +351,7 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
                     const cell      = pickMap.get(`${t.id}:${pos}`);
                     const isCurrent = !cell && currentTeam?.id === t.id;
                     const isNew     = cell ? newPickIds.has(cell.id) : false;
-                    const color     = getTeamColor(t.id);
+                    const color     = getTeamColor(t.id, t.draft_position);
                     return (
                       <td
                         key={t.id}
@@ -387,7 +387,7 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
           </div>
           <div className="log-rows">
             {[...picks].reverse().map(pick => {
-              const color = getTeamColor(pick.team_id);
+              const color = getTeamColor(pick.team_id, pick.teams?.draft_position);
               return (
                 <div key={pick.id} className="log-row" style={{ '--team': color } as React.CSSProperties}>
                   <span className="log-num">#{String(pick.overall_pick).padStart(3, '0')}</span>

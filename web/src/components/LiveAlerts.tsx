@@ -113,14 +113,14 @@ export default function LiveAlerts() {
 
         const { data: player } = await supabase
           .from('players')
-          .select('id, name, team_id, teams(id, name)')
+          .select('id, name, team_id, teams(id, name, draft_position)')
           .eq('id', row.player_id)
           .single();
 
         if (!player) return;
 
-        const teamData = (player as any).teams as { id: string; name: string } | null;
-        const teamColor = teamData?.id ? getTeamColor(teamData.id) : 'var(--c-accent)';
+        const teamData = (player as any).teams as { id: string; name: string; draft_position: number | null } | null;
+        const teamColor = teamData?.id ? getTeamColor(teamData.id, teamData.draft_position) : 'var(--c-accent)';
 
         showToast({
           id: row.id,

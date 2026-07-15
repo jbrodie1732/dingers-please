@@ -15,17 +15,38 @@ const NAV = [
   { href: '/pool',     glyph: 'POL', label: 'Player Pool'  },
 ];
 
+// MLB's "today" runs on Eastern Time, not the visitor's local clock or UTC —
+// using UTC (as this used to) rolls the day over mid-evening ET, which is
+// exactly when night games are live, so it would undercount recent HRs and
+// then "correct" itself after midnight UTC. Compute the actual ET calendar
+// day's UTC bounds, DST included.
+function getEtDayBoundsUtc(): { startIso: string; endIso: string } {
+  const now = new Date();
+  const etDateStr = now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }); // YYYY-MM-DD in ET
+
+  const offsetName = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', timeZoneName: 'shortOffset', hour: '2-digit',
+  }).formatToParts(now).find(p => p.type === 'timeZoneName')?.value ?? 'GMT-5';
+  const offsetHours = parseInt(offsetName.replace('GMT', '') || '-5', 10);
+  const sign = offsetHours >= 0 ? '+' : '-';
+  const offsetStr = `${sign}${String(Math.abs(offsetHours)).padStart(2, '0')}:00`;
+
+  const start = new Date(`${etDateStr}T00:00:00${offsetStr}`);
+  const end   = new Date(start.getTime() + 24 * 3_600_000);
+  return { startIso: start.toISOString(), endIso: end.toISOString() };
+}
+
 function LivePill() {
   const [count, setCount] = useState<number>(0);
 
   useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const { startIso, endIso } = getEtDayBoundsUtc();
 
     supabase
       .from('home_runs')
       .select('id', { count: 'exact', head: true })
-      .gte('hit_at', `${today}T00:00:00`)
-      .lte('hit_at', `${today}T23:59:59`)
+      .gte('hit_at', startIso)
+      .lt('hit_at', endIso)
       .then(({ count: c }) => { if (c != null) setCount(c); });
 
     const channel = supabase

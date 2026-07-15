@@ -50,7 +50,8 @@ function BigField({
         const { cx, cy } = toFieldCoords(hr.spray_x, hr.spray_y);
         const isSel  = selected?.id === hr.id;
         const teamId = (hr.players as any)?.team_id ?? '';
-        const color  = teamId ? getTeamColor(teamId) : '#888';
+        const draftPosition = (hr.players as any)?.teams?.draft_position ?? null;
+        const color  = teamId ? getTeamColor(teamId, draftPosition) : '#888';
         return (
           <g key={hr.id} onClick={() => onSelect(isSel ? null : hr)} style={{ cursor: 'pointer' }}>
             {isSel && (
@@ -88,7 +89,8 @@ function MickeyDetail({ hr }: { hr: HomeRun }) {
   const angle  = (count / 30) * 180;
   const arcLen = (count / 30) * 226;
   const teamId = (hr.players as any)?.team_id ?? '';
-  const color  = teamId ? getTeamColor(teamId) : '#888';
+  const draftPosition = (hr.players as any)?.teams?.draft_position ?? null;
+  const color  = teamId ? getTeamColor(teamId, draftPosition) : '#888';
 
   return (
     <div className="mickey-detail">
@@ -178,7 +180,7 @@ export default function SprayChart({ homeRuns, standings }: Props) {
           All teams
         </button>
         {standings.map(t => {
-          const color = getTeamColor(t.team_id);
+          const color = getTeamColor(t.team_id, t.draft_position);
           const isOn  = selectedTeamId === t.team_id;
           return (
             <button

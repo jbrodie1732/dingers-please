@@ -15,7 +15,7 @@ export default function RosterView({ players, standings }: Props) {
   const [selectedId, setSelectedId] = useState<string>(standings[0]?.team_id ?? '');
 
   const team  = standings.find(t => t.team_id === selectedId) ?? standings[0];
-  const color = team ? getTeamColor(team.team_id) : 'var(--c-accent)';
+  const color = team ? getTeamColor(team.team_id, team.draft_position) : 'var(--c-accent)';
   const total = team?.total_hrs ?? 0;
 
   const teamPlayers = players
@@ -26,7 +26,7 @@ export default function RosterView({ players, standings }: Props) {
     <>
       <div className="roster-tabs">
         {standings.map((t, i) => {
-          const c   = getTeamColor(t.team_id);
+          const c   = getTeamColor(t.team_id, t.draft_position);
           const isOn = t.team_id === selectedId;
           return (
             <button

@@ -19,7 +19,7 @@ function FeedRow({ hr, fresh }: { hr: HomeRun; fresh?: boolean }) {
   const player   = hr.players;
   const teamName = player?.teams?.name ?? '?';
   const teamId   = (player as any)?.team_id as string | undefined;
-  const color    = teamId ? getTeamColor(teamId) : 'var(--c-textDim)';
+  const color    = teamId ? getTeamColor(teamId, player?.teams?.draft_position) : 'var(--c-textDim)';
 
   const label = hr.mickey_meter_label;
   const count = hr.mickey_meter_count;
@@ -76,7 +76,7 @@ export default function RealtimeFeed({ initialHRs }: Props) {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'home_runs' }, async (payload) => {
         const { data } = await supabase
           .from('home_runs')
-          .select('*, players(name, position, team_id, teams(name))')
+          .select('*, players(name, position, team_id, teams(name, draft_position))')
           .eq('id', payload.new.id)
           .single();
         if (data) {
