@@ -41,7 +41,7 @@ function LivePill() {
   return (
     <div className="livepill">
       <span className="livedot" />
-      <span>LIVE</span>
+      <span className="livepill-label">LIVE</span>
       <span className="livecount">{count}</span>
     </div>
   );
@@ -49,6 +49,16 @@ function LivePill() {
 
 export default function NavBar() {
   const path = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close the mobile drawer whenever the route changes.
+  useEffect(() => { setMenuOpen(false); }, [path]);
+
+  // Lock body scroll while the drawer is open.
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
 
   return (
     <header className="topbar">
@@ -69,7 +79,7 @@ export default function NavBar() {
           </div>
         </div>
 
-        {/* Center: nav */}
+        {/* Center: nav (desktop) */}
         <nav className="topnav" aria-label="Main navigation">
           {NAV.map(({ href, glyph, label }) => {
             const active = path === href;
@@ -86,7 +96,7 @@ export default function NavBar() {
           })}
         </nav>
 
-        {/* Right: live pill + admin lock */}
+        {/* Right: live pill + admin lock + mobile menu toggle */}
         <div className="topbar-right">
           <LivePill />
           <Link href="/admin" className="lock-btn" title="Commissioner admin" aria-label="Open admin">
@@ -96,9 +106,38 @@ export default function NavBar() {
               <circle cx="8" cy="10.5" r="1" fill="currentColor"/>
             </svg>
           </Link>
+          <button
+            className={`menu-toggle${menuOpen ? ' is-open' : ''}`}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(o => !o)}
+          >
+            <span className="menu-bar" />
+            <span className="menu-bar" />
+            <span className="menu-bar" />
+          </button>
         </div>
 
       </div>
+
+      {/* Mobile drawer nav */}
+      <div className={`mobile-nav-backdrop${menuOpen ? ' is-open' : ''}`} onClick={() => setMenuOpen(false)} />
+      <nav className={`mobile-nav${menuOpen ? ' is-open' : ''}`} aria-label="Mobile navigation">
+        {NAV.map(({ href, glyph, label }) => {
+          const active = path === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`mobile-navlink${active ? ' is-active' : ''}`}
+              onClick={() => setMenuOpen(false)}
+            >
+              <span className="navbtn-glyph">{glyph}</span>
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
     </header>
   );
 }

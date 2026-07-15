@@ -53,6 +53,7 @@ export default function StandingsTable({ initialStandings }: Props) {
         </div>
       </div>
 
+      <div className="board-scroll">
       <div className="board-table">
         {/* header */}
         <div className="board-row board-head">
@@ -113,6 +114,7 @@ export default function StandingsTable({ initialStandings }: Props) {
             </div>
           );
         })}
+      </div>
       </div>
     </section>
   );

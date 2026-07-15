@@ -125,6 +125,7 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
       </div>
 
       <div className="card pool-table">
+        <div className="pool-scroll">
         <div className="ptbl-row ptbl-head">
           <SortHeader label="PLAYER" sortKey="name"          activeKey={sortKey} dir={sortDir} onClick={handleSort} className="c-name" />
           <SortHeader label="POS"    sortKey="position"      activeKey={sortKey} dir={sortDir} onClick={handleSort} className="c-pos" />
@@ -152,6 +153,7 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
             </div>
           </div>
         ))}
+        </div>
       </div>
     </>
   );
