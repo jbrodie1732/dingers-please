@@ -32,20 +32,45 @@ function parseCSV(text) {
 }
 
 // ---- Load CSV → Map<stadiumName, sample[]> ----
+//
+// NOTE: data/mlb_stadia_paths.csv only has columns `team,x,y,segment` — raw
+// Gameday-coordinate points traced off each park's diagram. It does NOT have
+// a `stadium`, `d_wall`, `fence_height`, `spray_angle_stadia`, or `team_abbr`
+// column. The original version of this function filtered on those
+// nonexistent columns, so every row was skipped and loadStadiaPaths() always
+// returned an empty Map — meaning "parks cleared" was always 0 and every
+// home run got the same (worst) Mickey Meter label. Fixed by deriving wall
+// distance + spray angle from the raw x/y points ourselves, using the same
+// Gameday hit-coordinate convention statsapi's hitData.coordinates uses
+// (home plate ≈ (125.42, 198.27), ~2.495 ft per coordinate unit), and by
+// keeping only the `outfield_outer` segment (the actual fence trace).
+const HOME_X = 125.42;
+const HOME_Y = 198.27;
+const FT_PER_UNIT = 2.495;
+const DEFAULT_FENCE_HEIGHT = 8; // no per-park fence-height data exists in the CSV; uniform fallback
+
 function loadStadiaPaths(csvPath) {
   const text = fs.readFileSync(csvPath, 'utf8');
   const rows = parseCSV(text);
   const byPark = new Map();
   for (const r of rows) {
-    if (!r.stadium || !r.x || !r.y || !r.d_wall) continue;
-    const stadium = String(r.stadium).trim();
+    if (!r.team || !r.x || !r.y || r.segment !== 'outfield_outer') continue;
+    const x = Number(r.x);
+    const y = Number(r.y);
+    if (Number.isNaN(x) || Number.isNaN(y)) continue;
+
+    const x_c = x - HOME_X;
+    const y_c = HOME_Y - y;
+    if (y_c <= 0) continue; // behind/beside home plate — not part of the true outfield fence arc
+
+    const stadium = String(r.team).trim();
     const rec = {
-      x:                  Number(r.x),
-      y:                  Number(r.y),
-      d_wall:             Number(r.d_wall),
-      fence_height:       Number(r.fence_height || 8),
-      spray_angle_stadia: Number(r.spray_angle_stadia || angleDegFromXY(Number(r.x), Number(r.y))),
-      team_abbr:          (r.team_abbr || '').trim(),
+      x,
+      y,
+      d_wall:             Math.sqrt(x_c * x_c + y_c * y_c) * FT_PER_UNIT,
+      fence_height:       DEFAULT_FENCE_HEIGHT,
+      spray_angle_stadia: angleDegFromXY(x_c, y_c),
+      team_abbr:          stadium,
     };
     if (!byPark.has(stadium)) byPark.set(stadium, []);
     byPark.get(stadium).push(rec);

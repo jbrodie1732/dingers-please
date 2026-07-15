@@ -39,6 +39,94 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, message: 'Draft reset. All picks deleted, all players unassigned.' });
   }
 
+  // ── undo-last-pick ───────────────────────────────────────────────────────
+  // Un-drafts whoever was picked most recently and deletes that pick record.
+  // Safe to click repeatedly — each call just undoes the new "most recent" pick.
+  if (action === 'undo-last-pick') {
+    const { data: lastPick, error: findErr } = await db
+      .from('draft_picks')
+      .select('id, round, pick_in_round, overall_pick, player_id, team_id, players(name, position), teams(name)')
+      .eq('season', SEASON)
+      .order('overall_pick', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (findErr || !lastPick) {
+      return NextResponse.json({ error: 'No picks to undo' }, { status: 400 });
+    }
+
+    const [{ error: playerErr }, { error: pickErr }] = await Promise.all([
+      db.from('players').update({ team_id: null }).eq('id', lastPick.player_id),
+      db.from('draft_picks').delete().eq('id', lastPick.id),
+    ]);
+    if (playerErr || pickErr) {
+      return NextResponse.json({ error: playerErr?.message ?? pickErr?.message }, { status: 500 });
+    }
+
+    const playerName = (lastPick.players as any)?.name ?? 'Player';
+    const teamName    = (lastPick.teams as any)?.name ?? 'team';
+    return NextResponse.json({
+      success: true,
+      message: `Undid pick #${lastPick.overall_pick} (Rd ${lastPick.round}, Pick ${lastPick.pick_in_round}): ${playerName} → ${teamName}. Player is available again.`,
+    });
+  }
+
+  // ── override-pick ────────────────────────────────────────────────────────
+  // Swaps the player on an existing pick for a different currently-available
+  // player at the same position, without touching round/pick numbering or
+  // any other pick. Use this to fix "we drafted the wrong guy" without
+  // rewinding everything after it.
+  if (action === 'override-pick') {
+    const { pickId, newPlayerId } = body;
+    if (!pickId || !newPlayerId) {
+      return NextResponse.json({ error: 'pickId and newPlayerId are required' }, { status: 400 });
+    }
+
+    const { data: pick, error: pickFindErr } = await db
+      .from('draft_picks')
+      .select('id, team_id, player_id, round, pick_in_round, overall_pick, players(name, position), teams(name)')
+      .eq('id', pickId)
+      .single();
+    if (pickFindErr || !pick) {
+      return NextResponse.json({ error: 'Pick not found' }, { status: 400 });
+    }
+
+    const oldPlayerName = (pick.players as any)?.name ?? 'that player';
+    const oldPosition   = (pick.players as any)?.position;
+    const teamName      = (pick.teams as any)?.name ?? 'the team';
+
+    const { data: newPlayer, error: newPlayerErr } = await db
+      .from('players')
+      .select('id, name, position, team_id')
+      .eq('id', newPlayerId)
+      .single();
+    if (newPlayerErr || !newPlayer) {
+      return NextResponse.json({ error: 'Replacement player not found' }, { status: 400 });
+    }
+    if (newPlayer.team_id !== null) {
+      return NextResponse.json({ error: `${newPlayer.name} is already on a roster` }, { status: 400 });
+    }
+    if (newPlayer.position !== oldPosition) {
+      return NextResponse.json({
+        error: `${newPlayer.name} is a ${newPlayer.position}, but this pick is for a ${oldPosition}`,
+      }, { status: 400 });
+    }
+
+    const [{ error: freeErr }, { error: assignErr }, { error: pickUpdateErr }] = await Promise.all([
+      db.from('players').update({ team_id: null }).eq('id', pick.player_id),
+      db.from('players').update({ team_id: pick.team_id }).eq('id', newPlayer.id),
+      db.from('draft_picks').update({ player_id: newPlayer.id }).eq('id', pick.id),
+    ]);
+    if (freeErr || assignErr || pickUpdateErr) {
+      return NextResponse.json({ error: freeErr?.message ?? assignErr?.message ?? pickUpdateErr?.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Pick #${pick.overall_pick} (Rd ${pick.round}, Pick ${pick.pick_in_round}): ${oldPlayerName} → ${newPlayer.name} on ${teamName}. ${oldPlayerName} is available again.`,
+    });
+  }
+
   // ── wipe ─────────────────────────────────────────────────────────────────
   if (action === 'wipe') {
     const FAKE_ID = '00000000-0000-0000-0000-000000000000';

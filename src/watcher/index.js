@@ -191,6 +191,8 @@ async function pollGames() {
             fantasyTeam: teamName,
             teamTotal:   teamEntry?.total_hrs || 1,
             rank,
+            mickeyCount,
+            mickeyLabel,
           });
 
           console.log(`⚾  HR: ${playerName} (${teamName}) — ${hit.distance ?? 'N/A'} ft | Rank: ${rank}`);

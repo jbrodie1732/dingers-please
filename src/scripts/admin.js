@@ -18,6 +18,8 @@ const COMMANDS = [
   { name: 'set-add-drop-limit — change the season add/drop limit', value: 'set-add-drop-limit' },
   { name: 'show-roster        — dump current rosters + HRs per player', value: 'show-roster' },
   { name: 'show-transactions  — list all add/drop transactions', value: 'show-transactions' },
+  { name: 'undo-last-pick     — undo the most recent draft pick (repeatable)', value: 'undo-last-pick' },
+  { name: 'override-pick      — swap a past pick for a different available player', value: 'override-pick' },
   { name: 'reset-draft        — wipe all draft picks and unassign all players', value: 'reset-draft' },
 ];
 
@@ -155,6 +157,88 @@ async function showTransactions() {
   }
 }
 
+// Undo whoever was picked most recently — un-drafts the player and deletes
+// the draft_picks row. Safe to call repeatedly: each call just undoes the
+// new "most recent" pick, so running it N times rewinds N picks.
+async function undoLastPick() {
+  const { data: lastPick, error: findErr } = await supabase
+    .from('draft_picks')
+    .select('id, round, pick_in_round, overall_pick, player_id, team_id, players(name, position), teams(name)')
+    .eq('season', 2026)
+    .order('overall_pick', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (findErr || !lastPick) { console.log('No picks to undo.'); return; }
+
+  console.log(chalk.gray(`\nMost recent pick: #${lastPick.overall_pick} (Rd ${lastPick.round}.${lastPick.pick_in_round}) — ${lastPick.players?.name} → ${lastPick.teams?.name}`));
+  const { confirm } = await inquirer.prompt([{
+    type: 'confirm', name: 'confirm', message: 'Undo this pick?', default: true,
+  }]);
+  if (!confirm) { console.log('Cancelled.'); return; }
+
+  const [{ error: playerErr }, { error: pickErr }] = await Promise.all([
+    supabase.from('players').update({ team_id: null }).eq('id', lastPick.player_id),
+    supabase.from('draft_picks').delete().eq('id', lastPick.id),
+  ]);
+  if (playerErr || pickErr) { console.error(chalk.red('Error:', playerErr?.message ?? pickErr?.message)); return; }
+  console.log(chalk.green(`✅ Undid pick #${lastPick.overall_pick}. ${lastPick.players?.name} is available again.`));
+  console.log(chalk.gray('Run this command again to keep rewinding further back.'));
+}
+
+// Swap the player on an existing pick for a different currently-available
+// player at the same position, without touching round/pick numbering or any
+// other pick. Use this to fix "we drafted the wrong guy" without rewinding
+// everything after it.
+async function overridePick() {
+  const { data: picks } = await supabase
+    .from('draft_picks')
+    .select('id, round, pick_in_round, overall_pick, player_id, team_id, players(name, position), teams(name)')
+    .eq('season', 2026)
+    .order('overall_pick', { ascending: false })
+    .limit(50);
+
+  if (!picks?.length) { console.log('No picks to override.'); return; }
+
+  const { pickId } = await inquirer.prompt([{
+    type: 'list', name: 'pickId',
+    message: 'Which pick do you want to override?',
+    choices: picks.map(p => ({
+      name: `#${p.overall_pick} (Rd ${p.round}.${p.pick_in_round}) — ${p.players?.name} (${p.players?.position}) → ${p.teams?.name}`,
+      value: p.id,
+    })),
+  }]);
+  const pick = picks.find(p => p.id === pickId);
+  const position = pick.players?.position;
+
+  const { data: available } = await supabase
+    .from('players')
+    .select('id, name, position')
+    .is('team_id', null)
+    .eq('position', position)
+    .order('name');
+
+  if (!available?.length) { console.log(chalk.red(`No available ${position}s to swap in.`)); return; }
+
+  const { newPlayerId } = await inquirer.prompt([{
+    type: 'list', name: 'newPlayerId',
+    message: `Replace ${pick.players?.name} with which available ${position}?`,
+    choices: available.map(p => ({ name: p.name, value: p.id })),
+  }]);
+  const newPlayer = available.find(p => p.id === newPlayerId);
+
+  const [{ error: freeErr }, { error: assignErr }, { error: pickUpdateErr }] = await Promise.all([
+    supabase.from('players').update({ team_id: null }).eq('id', pick.player_id),
+    supabase.from('players').update({ team_id: pick.team_id }).eq('id', newPlayer.id),
+    supabase.from('draft_picks').update({ player_id: newPlayer.id }).eq('id', pick.id),
+  ]);
+  if (freeErr || assignErr || pickUpdateErr) {
+    console.error(chalk.red('Error:', freeErr?.message ?? assignErr?.message ?? pickUpdateErr?.message));
+    return;
+  }
+  console.log(chalk.green(`✅ Pick #${pick.overall_pick}: ${pick.players?.name} → ${newPlayer.name} on ${pick.teams?.name}. ${pick.players?.name} is available again.`));
+}
+
 async function resetDraft() {
   console.log(chalk.red('\n⚠️  This will delete ALL draft picks and unassign ALL players for 2026.'));
   const { confirm } = await inquirer.prompt([{
@@ -196,6 +280,8 @@ async function main() {
   else if (command === 'set-add-drop-limit') await setAddDropLimit();
   else if (command === 'show-roster')        await showRoster();
   else if (command === 'show-transactions')  await showTransactions();
+  else if (command === 'undo-last-pick')     await undoLastPick();
+  else if (command === 'override-pick')      await overridePick();
   else if (command === 'reset-draft')        await resetDraft();
   else console.log(chalk.red(`Unknown command: ${command}`));
 }

@@ -2,10 +2,11 @@ module.exports = {
   apps: [
     {
       // Live game watcher — polls MLB API every 60s, auto-shuts down when no games
-      // PM2 restarts it daily at noon ET so it's ready for first pitch
+      // PM2 restarts it daily at 11am ET so it's ready for first pitch
       name: 'dinger-watcher',
       script: 'src/watcher/index.js',
-      cron_restart: '0 12 * * *',   // restart at noon ET every day
+      cron_restart: '0 11 * * *',   // restart at 11am ET every day
+      time_zone: 'America/New_York', // pin the cron to ET regardless of the host machine's local clock
       watch: false,
       autorestart: true,            // restart if it crashes mid-game
       max_restarts: 10,
@@ -22,6 +23,7 @@ module.exports = {
       name: 'dinger-summary',
       script: 'src/scripts/send-summary.js',
       cron_restart: '0 8 * * *',
+      time_zone: 'America/New_York', // pin the cron to ET regardless of the host machine's local clock
       watch: false,
       autorestart: false,           // run once and exit
       env: {

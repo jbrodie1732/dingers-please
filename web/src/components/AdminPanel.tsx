@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { Team } from '@/lib/types';
+import type { Team, DraftPick } from '@/lib/types';
 import { getTeamColor } from '@/lib/types';
 
 const SEASON = 2026;
@@ -17,12 +17,14 @@ type Transaction = {
 };
 
 type RosterPlayer = { id: string; name: string; position: string };
+type PoolPlayer   = { id: string; name: string; position: string };
 
-type TabId = 'addrop' | 'hr' | 'config' | 'history' | 'danger';
+type TabId = 'addrop' | 'hr' | 'draft' | 'config' | 'history' | 'danger';
 
 const TABS: { id: TabId; label: string; glyph: string }[] = [
   { id: 'addrop',  label: 'Add / Drop', glyph: '⇄' },
   { id: 'hr',      label: 'Manual HR',  glyph: '◎' },
+  { id: 'draft',   label: 'Draft',      glyph: '↩' },
   { id: 'config',  label: 'Season',     glyph: '⚙' },
   { id: 'history', label: 'History',    glyph: '☰' },
   { id: 'danger',  label: 'Danger',     glyph: '⚠' },
@@ -39,6 +41,12 @@ export default function AdminPanel() {
   const [addDropLimit, setAddDropLimit] = useState(2);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [teamBudgets,  setTeamBudgets]  = useState<Record<string, { used: number; limit: number }>>({});
+
+  // Draft tools (undo / override)
+  const [picks,       setPicks]       = useState<DraftPick[]>([]);
+  const [poolPlayers, setPoolPlayers] = useState<PoolPlayer[]>([]);
+  const [overridingPickId, setOverridingPickId] = useState<string | null>(null);
+  const [overrideSearch,   setOverrideSearch]   = useState('');
 
   // Add/drop
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
@@ -75,7 +83,7 @@ export default function AdminPanel() {
   }
 
   const fetchData = useCallback(async () => {
-    const [{ data: teamsData }, { data: configData }, { data: txData }] = await Promise.all([
+    const [{ data: teamsData }, { data: configData }, { data: txData }, { data: pickData }, { data: poolData }] = await Promise.all([
       supabase.from('teams').select('id, name, draft_position, created_at').order('name'),
       supabase.from('season_config').select('add_drop_limit').eq('season', SEASON).single(),
       supabase
@@ -83,6 +91,16 @@ export default function AdminPanel() {
         .select('id, effective_at, notes, teams(name), dropped:players!dropped_player_id(name, position), added:players!added_player_id(name)')
         .eq('season', SEASON)
         .order('effective_at', { ascending: false }),
+      supabase
+        .from('draft_picks')
+        .select('id, season, round, pick_in_round, overall_pick, player_id, team_id, drafted_at, players(id, name, position), teams(name)')
+        .eq('season', SEASON)
+        .order('overall_pick', { ascending: false }),
+      supabase
+        .from('players')
+        .select('id, name, position')
+        .is('team_id', null)
+        .order('name'),
     ]);
     if (teamsData) {
       setTeams(teamsData as Team[]);
@@ -91,6 +109,8 @@ export default function AdminPanel() {
     const lim = configData?.add_drop_limit ?? 2;
     if (configData) { setAddDropLimit(lim); setDraftLimit(lim); }
     if (txData)     { setTransactions(txData as unknown as Transaction[]); }
+    if (pickData)   { setPicks(pickData as unknown as DraftPick[]); }
+    if (poolData)   { setPoolPlayers(poolData as PoolPlayer[]); }
 
     if (teamsData) {
       const budgets: Record<string, { used: number; limit: number }> = {};
@@ -364,6 +384,25 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {/* ── Draft tools ─────────────────────────────────────────────────── */}
+        {tab === 'draft' && (
+          <DraftToolsTab
+            picks={picks}
+            poolPlayers={poolPlayers}
+            overridingPickId={overridingPickId}
+            setOverridingPickId={setOverridingPickId}
+            overrideSearch={overrideSearch}
+            setOverrideSearch={setOverrideSearch}
+            loading={loading}
+            onUndo={() => callAdmin('undo-last-pick')}
+            onOverride={(pickId, newPlayerId) => {
+              callAdmin('override-pick', { pickId, newPlayerId });
+              setOverridingPickId(null);
+              setOverrideSearch('');
+            }}
+          />
+        )}
+
         {/* ── Season Config ───────────────────────────────────────────────── */}
         {tab === 'config' && (
           <div className="config-tab">
@@ -491,6 +530,102 @@ function DangerCard({
       <button className="danger-card-trigger" onClick={() => setConfirming(true)} disabled={loading}>
         {label}
       </button>
+    </div>
+  );
+}
+
+function DraftToolsTab({
+  picks, poolPlayers, overridingPickId, setOverridingPickId,
+  overrideSearch, setOverrideSearch, loading, onUndo, onOverride,
+}: {
+  picks:               DraftPick[];
+  poolPlayers:         { id: string; name: string; position: string }[];
+  overridingPickId:    string | null;
+  setOverridingPickId: (id: string | null) => void;
+  overrideSearch:      string;
+  setOverrideSearch:   (s: string) => void;
+  loading:             boolean;
+  onUndo:              () => void;
+  onOverride:          (pickId: string, newPlayerId: string) => void;
+}) {
+  const lastPick = picks[0]; // picks are ordered overall_pick desc
+
+  return (
+    <div className="draft-tools">
+      <div className="draft-tools-blurb">
+        Undo the most recent pick (click again to keep rewinding), or override any past pick with a
+        different currently-available player at the same position without disturbing anything else.
+      </div>
+
+      <div className="undo-card">
+        {lastPick ? (
+          <>
+            <div className="undo-card-info">
+              <span className="undo-card-eyebrow">MOST RECENT PICK — #{lastPick.overall_pick} (RD {lastPick.round}.{lastPick.pick_in_round})</span>
+              <span className="undo-card-name">{lastPick.players?.name}</span>
+              <span className="undo-card-meta">{lastPick.players?.position} → {lastPick.teams?.name}</span>
+            </div>
+            <button className="undo-card-btn" onClick={onUndo} disabled={loading}>
+              {loading ? '…' : 'Undo last pick'}
+            </button>
+          </>
+        ) : (
+          <div className="undo-card-empty">NO PICKS MADE YET</div>
+        )}
+      </div>
+
+      <div className="pick-override-list">
+        <div className="pol-head">ALL PICKS ({picks.length}) — click one to override</div>
+        {picks.length === 0 && <div className="undo-card-empty">NO PICKS MADE YET</div>}
+        {picks.map(pick => {
+          const isOpen = overridingPickId === pick.id;
+          const candidates = poolPlayers.filter(p =>
+            p.position === pick.players?.position &&
+            (!overrideSearch || p.name.toLowerCase().includes(overrideSearch.toLowerCase()))
+          );
+          return (
+            <div key={pick.id} className={`pol-row${isOpen ? ' is-open' : ''}`}>
+              <button
+                className="pol-summary"
+                onClick={() => { setOverridingPickId(isOpen ? null : pick.id); setOverrideSearch(''); }}
+              >
+                <span className="pol-num">#{pick.overall_pick}</span>
+                <span className="pol-rd">RD{pick.round}.{pick.pick_in_round}</span>
+                <span className="pol-team">{pick.teams?.name}</span>
+                <span className="pol-arrow">→</span>
+                <span className="pol-player">{pick.players?.name}</span>
+                <span className="pol-pos">{pick.players?.position}</span>
+              </button>
+              {isOpen && (
+                <div className="pol-override-panel">
+                  <input
+                    className="pol-search"
+                    placeholder={`Search available ${pick.players?.position}s…`}
+                    value={overrideSearch}
+                    onChange={e => setOverrideSearch(e.target.value)}
+                    autoFocus
+                  />
+                  <div className="pol-candidates">
+                    {candidates.length === 0 && (
+                      <div className="pol-empty">No available {pick.players?.position}s match.</div>
+                    )}
+                    {candidates.slice(0, 12).map(c => (
+                      <button
+                        key={c.id}
+                        className="pol-candidate"
+                        disabled={loading}
+                        onClick={() => onOverride(pick.id, c.id)}
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

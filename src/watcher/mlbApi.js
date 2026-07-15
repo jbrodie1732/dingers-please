@@ -31,9 +31,15 @@ function isActiveGame(game) {
 }
 
 // Extract Statcast hit data from a play object.
+// Prefer the playEvent that actually put the ball in play (the final pitch
+// of the at-bat, details.isInPlay === true) — an earlier foul ball in the
+// same at-bat can also carry a hitData block, and picking the first
+// hitData found (rather than the actual scoring contact) would record the
+// foul ball's distance/EV/launch angle instead of the home run's.
 function getHitData(play) {
   if (!Array.isArray(play.playEvents)) return {};
-  const ev = play.playEvents.find(e => e.hitData);
+  const ev = play.playEvents.find(e => e.hitData && e.details?.isInPlay)
+    || play.playEvents.find(e => e.hitData);
   if (!ev) return {};
   return {
     distance:    ev.hitData?.totalDistance    != null ? Number(ev.hitData.totalDistance)           : null,

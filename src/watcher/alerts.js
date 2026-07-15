@@ -13,16 +13,20 @@ function getDongLabel(count) {
   return 'okay kinda legit';
 }
 
-function buildAlertMessage({ playerName, playerTotal, distance, fantasyTeam, teamTotal, rank }) {
+function buildAlertMessage({ playerName, playerTotal, distance, fantasyTeam, teamTotal, rank, mickeyCount, mickeyLabel }) {
   const distStr = distance != null ? `${distance} ft.` : 'N/A';
-  return [
+  const lines = [
     '🚨 DINGER ALERT 🚨',
     `Player: ${playerName} (${playerTotal})`,
     `Distance: ${distStr}`,
     `Team: ${fantasyTeam}`,
     `Team HR Total: ${teamTotal}`,
     `Current Rank: ${rank}`,
-  ].join('\n');
+  ];
+  if (mickeyCount != null && mickeyLabel) {
+    lines.push(`Mickey Meter: ${mickeyCount}/30 — ${mickeyLabel}`);
+  }
+  return lines.join('\n');
 }
 
 function sendAlert(alertData) {

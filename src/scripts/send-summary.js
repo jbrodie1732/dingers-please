@@ -63,6 +63,12 @@ function formatRankMovement(prev, curr) {
   const rising  = [];
   const falling = [];
   for (const team of Object.keys(currRanks)) {
+    // Teams with zero HRs before today are omitted from `prev` entirely
+    // (prevStandings is built only from teams that appear in hrsUpToYesterday),
+    // so they have no legitimate previous rank to compare against. Skip them
+    // rather than defaulting to 0, which would falsely show every team's
+    // first-ever HR of the season as a big rank "fall".
+    if (!(team in prevRanks)) continue;
     const pRank = parseInt(prevRanks[team]) || 0;
     const cRank = parseInt(currRanks[team]) || 0;
     const delta = pRank - cRank;  // positive = moved up

@@ -20,7 +20,7 @@
 ## 🗓️ Pre-Season Setup (do once, in order)
 
 ### 1. Configure teams & draft order
-Edit `config/draft.config.js` — teams listed top-to-bottom = pick 1 through 10.
+Edit `config/draft.config.js` — teams listed top-to-bottom = pick 1 through N (currently 11 teams). The draft order, snake logic, and team count everywhere else (web app, admin CLI) are all derived dynamically from this list and from the `teams` table — you can add or remove teams here without touching any other code.
 
 ### 2. Run the Supabase migrations
 In Supabase SQL editor, run these in order:
@@ -36,7 +36,7 @@ Make sure `data/dingers_player_data.xlsx` is present (MAIN tab is the source of 
 ```bash
 npm run load-player-pool
 ```
-Upserts all 10 teams (with draft positions) + inserts players with `team_id = null`, including their MLB Statcast player ID, Statcast naming convention (both used for reliable live-game name matching — no need to run `fetch-mlb-ids` before the draft anymore, since IDs are already in the workbook), team abbreviation, position, and pre-draft season HR total.
+Upserts all teams from `config/draft.config.js` (with draft positions) + inserts players with `team_id = null`, including their MLB Statcast player ID, Statcast naming convention (both used for reliable live-game name matching — no need to run `fetch-mlb-ids` before the draft anymore, since IDs are already in the workbook), team abbreviation, position, and pre-draft season HR total.
 
 ### 4. Set web env vars
 Copy `web/.env.local.example` → `web/.env.local` and fill in:
@@ -58,14 +58,34 @@ The draft lives at **`/draft`** on the web app. Everyone can view it live; only 
 5. Board updates in real time for all viewers (Supabase Realtime)
 
 **Rules enforced server-side:**
-- Correct snake order (odd rounds left→right, even rounds right→left)
+- Correct snake order (odd rounds left→right, even rounds right→left), derived from however many teams are in `config/draft.config.js` / the `teams` table — never hardcoded
 - A team can't draft a position they already own
 - Can't draft an already-drafted player
+
+**Made a mistake mid-draft?** Open the admin panel's **Draft** tab (web) or run `npm run admin` → `undo-last-pick` / `override-pick` (CLI) — see [Fixing a Draft Pick](#-fixing-a-draft-pick) below.
 
 **After the real draft** — MLB player IDs are now pre-loaded from `dingers_player_data.xlsx`, so this step is usually unnecessary. Only run it if a drafted player is missing an ID (e.g. a late add not in the original workbook):
 ```bash
 npm run fetch-mlb-ids:save
 ```
+
+---
+
+## ↩️ Fixing a Draft Pick
+
+Two ways to correct a mistake mid-draft, without wiping the whole thing:
+
+**Undo last pick** — un-drafts whoever was picked most recently and deletes that pick record, so the player is available again and it becomes the current pick again. Click it repeatedly to rewind further back one pick at a time.
+- Web: Admin panel → **Draft** tab → **Undo last pick**
+- CLI: `npm run admin` → `undo-last-pick`
+
+**Override a pick** — swap the player on any past pick (not just the most recent one) for a different currently-available player at the *same position*, without touching round/pick numbering or any other pick. Use this to fix "we drafted the wrong guy" three picks ago without rewinding everyone after it.
+- Web: Admin panel → **Draft** tab → pick the row → choose a replacement
+- CLI: `npm run admin` → `override-pick` → pick from the list → choose a replacement
+
+**Reset draft** — nuclear option: wipes every pick and unassigns every player. Use for a full redo (e.g. a test/fake draft).
+- Web: Admin panel → **Danger Zone**
+- CLI: `npm run admin` → `reset-draft`
 
 ---
 
@@ -81,14 +101,19 @@ Starts two processes:
 
 | Process | What it does | Schedule |
 |---|---|---|
-| `dinger-watcher` | Polls MLB API every 60s for live HRs | Restarts at **noon ET** every day |
+| `dinger-watcher` | Polls MLB API every 60s for live HRs | Restarts at **11am ET** every day |
 | `dinger-summary` | Sends morning iMessage recap | Fires at **8am** every day |
 
 ### How the watcher works
-- Polls all live MLB games every 60 seconds
-- When a tracked player hits a HR: saves it to Supabase, fires an iMessage to the group chat
-- Alert includes: player name, team, HR count, distance, standings update
-- Auto-shuts down after ~2 hours of no active games; PM2 revives it at noon next day
+- Polls all live MLB games every 60 seconds, matching batters against the rostered-player cache (by MLB player ID first, name as a fallback) — only currently-drafted, not-dropped players are tracked
+- Dedupes by `gamePk:atBatIndex`, both in-memory and against HRs already in the DB, so a restart mid-game won't double-alert
+- When a tracked player hits a HR: saves a `home_runs` row (distance, launch angle, exit velocity, spray x/y coordinates, game/at-bat identifiers, Mickey Meter result) to Supabase, then fires an iMessage to the group chat
+- Alert includes: player name + season HR total, distance, fantasy team, team HR total, current standings rank, and the Mickey Meter result ("would it dong" in X/30 parks)
+- Player and team HR totals aren't stored as separate incrementing counters — they're computed live via SQL views (`player_standings` / `team_standings`) over the `home_runs` table, so there's no drift risk between the watcher, the web app, and add/drop transactions
+- Auto-shuts down after ~2 hours of no active games; PM2 revives it at 11am ET next day. Note: if a day ever has a game scheduled to start before 11am ET (early getaway-day game, doubleheader, etc.), the watcher won't be running yet to catch it — adjust `cron_restart` in `ecosystem.config.js` if that becomes a real concern
+
+### The Mickey Meter ("Would It Dong?")
+For every logged HR, the watcher checks the ball's distance/angle/launch data against traced fence outlines for all 30 parks (`data/mlb_stadia_paths.csv`) and reports how many of them it would have cleared (X/30), with a joke label (`getDongLabel` in `src/watcher/alerts.js`) ranging from "100% Mickey Mouse Bullshit" to "okay kinda legit." Fence height data isn't available per park, so a uniform 8 ft is assumed for all 30 — real fences vary a lot (Fenway's Green Monster is 37 ft), so treat this as a fun approximation, not a precise model.
 
 ### PM2 commands
 ```bash
@@ -103,6 +128,33 @@ npm run pm2:start     # start everything back up
 node src/watcher/index.js        # run watcher manually (Ctrl+C to stop)
 node src/scripts/send-summary.js # fire the morning summary right now
 ```
+
+### Running unattended (no manual `npm run pm2:start` every day)
+
+Because alerts go out over iMessage, this has to run on your actual Mac — there's no cloud-hosted equivalent for AppleScript/Messages.app. But you can get most of the way to "set it and forget it" with two one-time setup steps:
+
+**1. Auto-relaunch PM2 on login/reboot**, so if the Mac restarts (macOS update, crash, power blip) it comes back on its own:
+```bash
+pm2 startup
+```
+This prints a `sudo ...` command — copy and run exactly that line once. Then save the current process list so it knows what to bring back:
+```bash
+pm2 save
+```
+Re-run `pm2 save` any time you add/remove a PM2 process.
+
+**2. Schedule the Mac to wake up before the 11am ET restart**, since PM2's cron can't fire while the machine is asleep:
+```bash
+sudo pmset repeat wakeorpoweron MTWRFSA 10:55:00
+```
+Check it's set with `pmset -g sched`.
+
+**Limits of this setup (why it's "hardened," not bulletproof):**
+- This only works if the Mac is *sleeping*, not fully shut down or unplugged — most MacBooks won't power on from a true shutdown via `pmset`, only wake from sleep. Keep it plugged in and just let the lid close / display sleep rather than shutting down.
+- If it loses power entirely (outage, dead battery, unplugged, physically off for repair) nothing will bring it back until you power it on and log in yourself — at which point `pm2 resurrect` kicks in automatically from step 1.
+- Don't fully log out — a locked screen is fine, but a logged-out session won't run the LaunchAgent PM2 registered.
+
+If you want true zero-Mac-dependency reliability (survives your laptop being closed, dead, or at the shop), the real fix is moving off iMessage to a cloud-native alert channel (Twilio SMS, Slack/Discord webhook, email) so the whole watcher can run on a $0–5/mo cloud box instead of your laptop — a bigger change, but worth it if these Mac-dependency edge cases start actually biting you.
 
 ---
 
@@ -141,7 +193,11 @@ node src/scripts/admin.js <command>
 | `set-add-drop-limit` | Change the season-wide add/drop budget (default: 2) |
 | `show-roster` | Dump all rosters with HR counts |
 | `show-transactions` | List all add/drop history |
+| `undo-last-pick` | Undo the most recent draft pick — repeatable to rewind further back |
+| `override-pick` | Swap the player on any past pick for a different available same-position player |
 | `reset-draft` | **Wipe all draft picks + unassign all players** (testing / redo) |
+
+The same tools are also available in the web app's admin panel (**Draft** tab), which mirrors the CLI 1:1 and is usually the faster option during a live draft.
 
 ---
 
@@ -151,7 +207,7 @@ node src/scripts/admin.js <command>
 ```bash
 npm run seed
 ```
-Creates 10 teams, 90 players (one per position per team), and ~200 fake HRs across July 15–Sept 15 2026.
+Creates one team per entry in `config/draft.config.js` (currently 11), one player per position per team, and ~200 fake HRs across July 15–Sept 15 2026.
 
 ### Wipe all seed data
 ```bash
@@ -162,7 +218,7 @@ Clears all tables: `home_runs`, `draft_picks`, `players`, `teams`.
 ### Full reset to test the draft
 ```bash
 npm run seed:wipe        # clear everything
-npm run load-player-pool # reload real 827-player pool + teams
+npm run load-player-pool # reload real player pool (from dingers_player_data.xlsx) + teams
 ```
 
 ---
@@ -202,9 +258,11 @@ npm run pm2:start            # start watcher + summary
 
 # During draft
 # → use the /draft page on the web app
+# → mistake? undo-last-pick or override-pick (admin panel Draft tab, or `npm run admin`)
 
-# After draft
-npm run fetch-mlb-ids:save   # link MLB IDs for name matching
+# After draft — only if a drafted player is missing an MLB ID
+# (xlsx already has IDs for the original pool; this is for late adds only)
+npm run fetch-mlb-ids:save
 
 # Add/drop
 npm run add-drop
