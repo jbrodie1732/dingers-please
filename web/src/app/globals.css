@@ -885,7 +885,7 @@ body::before {
   background: var(--c-surfaceHi); border: 1px solid var(--c-borderHi); border-radius: 8px;
   padding: 8px 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
   font-family: var(--font-mono); font-size: 10px; line-height: 1.4; white-space: normal;
-  text-align: left; z-index: 20;
+  text-align: left; z-index: 60; /* above the sticky table header (2) and sticky nav (50) */
   transition: opacity 120ms, transform 120ms;
 }
 .injury-tip::after {
@@ -896,6 +896,23 @@ body::before {
 .injury-badge:focus .injury-tip,
 .injury-badge:focus-visible .injury-tip {
   visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0);
+}
+
+/* When the badge sits in the first row right under a sticky header (e.g. the
+   Player Pool table narrowed to a single search result on mobile), opening
+   upward puts the tooltip right where the sticky header row renders, so it
+   visually gets covered. .injury-badge--down flips it to open below instead. */
+.injury-badge--down .injury-tip {
+  bottom: auto; top: calc(100% + 8px); transform: translateX(-50%) translateY(-2px);
+}
+.injury-badge--down .injury-tip::after {
+  top: auto; bottom: 100%;
+  border-top-color: transparent; border-bottom-color: var(--c-borderHi);
+}
+.injury-badge--down:hover .injury-tip,
+.injury-badge--down:focus .injury-tip,
+.injury-badge--down:focus-visible .injury-tip {
+  transform: translateX(-50%) translateY(0);
 }
 .injury-tip-tier   { font-weight: 700; letter-spacing: 0.06em; color: var(--c-mickey); text-transform: uppercase; }
 .injury-tip-detail { color: var(--c-text); }

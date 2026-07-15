@@ -146,7 +146,7 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
           <div key={p.id} className={`ptbl-row${p.fantasy_team ? ' is-drafted' : ''}`}>
             <div className="ptbl-c c-name">
               <span className="pname-text">{p.name}</span>
-              <InjuryBadge il_status={p.il_status} injury_detail={p.injury_detail} injury_update={p.injury_update} />
+              <InjuryBadge il_status={p.il_status} injury_detail={p.injury_detail} injury_update={p.injury_update} direction="down" />
             </div>
             <div className="ptbl-c c-pos"><span className="pos-tag">{p.position}</span></div>
             <div className="ptbl-c c-mlb">{p.mlb_team ?? '—'}</div>

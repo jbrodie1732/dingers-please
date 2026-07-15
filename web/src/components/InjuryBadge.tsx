@@ -15,14 +15,18 @@ export type InjuryInfo = {
   il_status:     string | null;
   injury_detail: string | null;
   injury_update: string | null;
+  // 'up' (default) opens the tooltip above the badge; 'down' opens it below.
+  // Use 'down' for rows that can end up right under a sticky header (e.g. a
+  // filtered/searched list on mobile), so the tooltip doesn't render behind it.
+  direction?: 'up' | 'down';
 };
 
-export default function InjuryBadge({ il_status, injury_detail, injury_update }: InjuryInfo) {
+export default function InjuryBadge({ il_status, injury_detail, injury_update, direction = 'up' }: InjuryInfo) {
   if (!il_status) return null;
   const emoji = IL_EMOJI[il_status] ?? '🩹';
 
   return (
-    <span className="injury-badge" tabIndex={0}>
+    <span className={`injury-badge${direction === 'down' ? ' injury-badge--down' : ''}`} tabIndex={0}>
       <span className="injury-emoji" aria-label={il_status}>{emoji}</span>
       <span className="injury-tip" role="tooltip">
         <span className="injury-tip-tier">{il_status}</span>
