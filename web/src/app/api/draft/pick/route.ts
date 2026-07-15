@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const ROUNDS     = 9;
-const TEAM_COUNT = 10;
-const SEASON     = 2026;
+const ROUNDS = 9;
+const SEASON = 2026;
 
 // Server-only client (service role bypasses RLS)
 function adminClient() {
@@ -59,7 +58,7 @@ export async function POST(req: NextRequest) {
     .eq('season', SEASON);
 
   const currentIdx = pickCount ?? 0;
-  const pickOrder  = buildPickOrder(TEAM_COUNT, ROUNDS);
+  const pickOrder  = buildPickOrder(teams.length, ROUNDS);
 
   if (currentIdx >= pickOrder.length) {
     return NextResponse.json({ error: 'Draft is complete' }, { status: 400 });

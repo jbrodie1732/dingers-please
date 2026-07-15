@@ -5,7 +5,7 @@ module.exports = {
   teams: [
     'Rob',
     'Jak',
-    'Zyns',
+    'Max',
     'Cole',
     'Al',
     'Steve',
@@ -13,6 +13,7 @@ module.exports = {
     'Nate',
     'Nick',
     'Mat',
+    'Steez',
   ],
   rounds: 9,
   positions: ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'],
