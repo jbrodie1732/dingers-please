@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import InjuryBadge from './InjuryBadge';
 
 export type PoolPlayer = {
   id:            string;
@@ -10,6 +11,9 @@ export type PoolPlayer = {
   fantasy_team:  string | null;
   total_hrs:     number;
   preseason_hrs: number;
+  il_status:     string | null;
+  injury_detail: string | null;
+  injury_update: string | null;
 };
 
 const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
@@ -140,7 +144,10 @@ export default function PlayerPool({ players }: { players: PoolPlayer[] }) {
           </div>
         ) : sorted.slice(0, 300).map(p => (
           <div key={p.id} className={`ptbl-row${p.fantasy_team ? ' is-drafted' : ''}`}>
-            <div className="ptbl-c c-name">{p.name}</div>
+            <div className="ptbl-c c-name">
+              <span className="pname-text">{p.name}</span>
+              <InjuryBadge il_status={p.il_status} injury_detail={p.injury_detail} injury_update={p.injury_update} />
+            </div>
             <div className="ptbl-c c-pos"><span className="pos-tag">{p.position}</span></div>
             <div className="ptbl-c c-mlb">{p.mlb_team ?? '—'}</div>
             <div className="ptbl-c c-preseason-hrs">{p.preseason_hrs > 0 ? p.preseason_hrs : '—'}</div>

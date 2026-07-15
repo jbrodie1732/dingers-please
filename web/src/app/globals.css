@@ -857,7 +857,8 @@ body::before {
 .ptbl-sort:hover { color: var(--c-text); }
 .ptbl-sort.is-active { color: var(--c-accent); }
 .ptbl-sort-arrow { font-size: 8px; opacity: 0.8; }
-.c-name   { font-size: 14px; font-weight: 500; color: var(--c-text); }
+.ptbl-c.c-name { font-size: 14px; font-weight: 500; color: var(--c-text); overflow: visible; display: flex; align-items: center; gap: 6px; }
+.pname-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .c-mlb    { font-family: var(--font-mono); font-size: 11px; color: var(--c-textMuted); }
 .c-preseason-hrs { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--c-bone); }
 .c-hrs    { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--c-bone); }
@@ -869,6 +870,36 @@ body::before {
 }
 .squad-on  { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--c-accent); }
 .squad-off { font-family: var(--font-mono); font-size: 11px; color: var(--c-textDim); }
+
+/* ─── Injury badge (Player Pool + Draft Room only) ──────────────────────────── */
+.injury-badge {
+  position: relative; display: inline-flex; align-items: center;
+  flex-shrink: 0; cursor: help; line-height: 1;
+}
+.injury-emoji { font-size: 13px; }
+.injury-tip {
+  visibility: hidden; opacity: 0; pointer-events: none;
+  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(2px);
+  display: flex; flex-direction: column; gap: 3px;
+  min-width: 160px; max-width: 240px;
+  background: var(--c-surfaceHi); border: 1px solid var(--c-borderHi); border-radius: 8px;
+  padding: 8px 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  font-family: var(--font-mono); font-size: 10px; line-height: 1.4; white-space: normal;
+  text-align: left; z-index: 20;
+  transition: opacity 120ms, transform 120ms;
+}
+.injury-tip::after {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: var(--c-borderHi);
+}
+.injury-badge:hover .injury-tip,
+.injury-badge:focus .injury-tip,
+.injury-badge:focus-visible .injury-tip {
+  visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0);
+}
+.injury-tip-tier   { font-weight: 700; letter-spacing: 0.06em; color: var(--c-mickey); text-transform: uppercase; }
+.injury-tip-detail { color: var(--c-text); }
+.injury-tip-update { color: var(--c-textMuted); }
 
 /* ─── Admin ──────────────────────────────────────────────────────────────────── */
 .admin-pin-card {
@@ -1241,7 +1272,8 @@ body::before {
 .pick-item:hover:not(:disabled) { border-color: var(--c-borderHi); background: var(--c-surfaceHi); }
 .pick-item.is-sel     { border-color: var(--c-accent); background: rgba(245,197,24,0.06); }
 .pick-item.is-blocked { opacity: 0.35; cursor: not-allowed; }
-.pi-name { font-size: 14px; font-weight: 500; color: var(--c-text); }
+.pi-name { font-size: 14px; font-weight: 500; color: var(--c-text); display: flex; align-items: center; gap: 6px; min-width: 0; }
+.pi-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .pi-mlb  { font-family: var(--font-mono); font-size: 10px; color: var(--c-textMuted); }
 .pi-pos  {
   font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em;
@@ -1293,8 +1325,9 @@ body::before {
   0%   { background: color-mix(in srgb, var(--team, var(--c-accent)) 32%, transparent); }
   100% { background: transparent; }
 }
-.cell-pick  { display: flex; flex-direction: column; gap: 2px; align-items: center; }
-.cell-name  { font-size: 11px; font-weight: 500; color: var(--c-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+.cell-pick     { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+.cell-name-row { display: flex; align-items: center; gap: 4px; max-width: 100px; }
+.cell-name  { font-size: 11px; font-weight: 500; color: var(--c-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .cell-mlb   { font-family: var(--font-mono); font-size: 9px; color: var(--c-textMuted); }
 .cell-target { font-size: 14px; opacity: 0.45; color: var(--team, var(--c-accent)); }
 .cell-empty  { font-family: var(--font-mono); font-size: 10px; color: var(--c-border); }

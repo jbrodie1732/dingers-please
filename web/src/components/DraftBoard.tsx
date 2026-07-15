@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Team, Player, DraftPick } from '@/lib/types';
 import { getTeamColor } from '@/lib/types';
+import InjuryBadge from './InjuryBadge';
 
 const ROUNDS    = 9;
 const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
@@ -75,12 +76,12 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
       const [{ data: freshPicks }, { data: freshPlayers }] = await Promise.all([
         supabase
           .from('draft_picks')
-          .select('*, players(id, name, position, mlb_team), teams(id, name, draft_position)')
+          .select('*, players(id, name, position, mlb_team, il_status, injury_detail, injury_update), teams(id, name, draft_position)')
           .eq('season', 2026)
           .order('overall_pick'),
         supabase
           .from('players')
-          .select('id, name, position, mlb_team, team_id, mlb_player_id, created_at')
+          .select('id, name, position, mlb_team, team_id, mlb_player_id, il_status, injury_detail, injury_update, created_at')
           .order('name'),
       ]);
       if (freshPicks)   setPicks(freshPicks as DraftPick[]);
@@ -92,7 +93,7 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
   const refreshPlayers = useCallback(async () => {
     const { data } = await supabase
       .from('players')
-      .select('id, name, position, mlb_team, team_id, mlb_player_id, created_at')
+      .select('id, name, position, mlb_team, team_id, mlb_player_id, il_status, injury_detail, injury_update, created_at')
       .order('name');
     if (data) setPlayers(data as Player[]);
   }, []);
@@ -100,7 +101,7 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
   const refreshPick = useCallback(async (newPick: DraftPick) => {
     const { data } = await supabase
       .from('draft_picks')
-      .select('*, players(id, name, position, mlb_team), teams(id, name, draft_position)')
+      .select('*, players(id, name, position, mlb_team, il_status, injury_detail, injury_update), teams(id, name, draft_position)')
       .eq('id', newPick.id)
       .single();
     if (data) {
@@ -273,7 +274,10 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
                         onClick={() => !blocked && setSelected(p)}
                         disabled={blocked}
                       >
-                        <span className="pi-name">{p.name}</span>
+                        <span className="pi-name">
+                          <span className="pi-name-text">{p.name}</span>
+                          <InjuryBadge il_status={p.il_status ?? null} injury_detail={p.injury_detail ?? null} injury_update={p.injury_update ?? null} />
+                        </span>
                         <span className="pi-mlb">{p.mlb_team ?? '—'}</span>
                         <span className="pi-pos">{p.position}</span>
                         <TierDots hrs={0} />
@@ -360,7 +364,14 @@ export default function DraftBoard({ initialTeams, initialPicks, initialPlayers 
                       >
                         {cell ? (
                           <div className="cell-pick">
-                            <div className="cell-name">{cell.players?.name ?? '—'}</div>
+                            <div className="cell-name-row">
+                              <div className="cell-name">{cell.players?.name ?? '—'}</div>
+                              <InjuryBadge
+                                il_status={cell.players?.il_status ?? null}
+                                injury_detail={cell.players?.injury_detail ?? null}
+                                injury_update={cell.players?.injury_update ?? null}
+                              />
+                            </div>
                             <div className="cell-mlb">{(cell.players as any)?.mlb_team ?? ''}</div>
                           </div>
                         ) : isCurrent ? (

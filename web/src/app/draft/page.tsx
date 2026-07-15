@@ -17,11 +17,11 @@ export default async function DraftPage() {
   const [{ data: teams }, { data: picks }, { data: players }] = await Promise.all([
     db.from('teams').select('id, name, draft_position, created_at').order('draft_position'),
     db.from('draft_picks')
-      .select('*, players(id, name, position, mlb_team), teams(id, name, draft_position)')
+      .select('*, players(id, name, position, mlb_team, il_status, injury_detail, injury_update), teams(id, name, draft_position)')
       .eq('season', 2026)
       .order('overall_pick'),
     db.from('players')
-      .select('id, name, position, mlb_team, team_id, mlb_player_id, created_at')
+      .select('id, name, position, mlb_team, team_id, mlb_player_id, il_status, injury_detail, injury_update, created_at')
       .order('name'),
   ]);
 

@@ -15,7 +15,7 @@ export default async function PoolPage() {
   const db = serverClient();
 
   const [{ data }, { data: hrData }] = await Promise.all([
-    db.from('players').select('id, name, position, mlb_team, preseason_hrs, teams(name)').order('name'),
+    db.from('players').select('id, name, position, mlb_team, preseason_hrs, il_status, injury_detail, injury_update, teams(name)').order('name'),
     db.from('player_standings').select('player_id, total_hrs'),
   ]);
 
@@ -32,6 +32,9 @@ export default async function PoolPage() {
     fantasy_team:  p.teams?.name ?? null,
     total_hrs:     hrsByPlayerId[p.id] ?? 0,
     preseason_hrs: p.preseason_hrs ?? 0,
+    il_status:     p.il_status ?? null,
+    injury_detail: p.injury_detail ?? null,
+    injury_update: p.injury_update ?? null,
   }));
 
   return (

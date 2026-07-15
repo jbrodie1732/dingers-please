@@ -12,6 +12,9 @@ export type Player = {
   position:      string;
   mlb_player_id: number | null;
   mlb_team?:     string | null;
+  il_status?:     string | null;
+  injury_detail?: string | null;
+  injury_update?: string | null;
   created_at:    string;
   teams?:        Team;
 };
