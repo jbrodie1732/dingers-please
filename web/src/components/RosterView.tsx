@@ -1,22 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { PlayerStanding, TeamStanding } from '@/lib/types';
 import { getTeamColor } from '@/lib/types';
+import { buildRadarModel } from '@/lib/radar';
+import RosterRadar from './RosterRadar';
 
 const POSITION_ORDER = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
 
 interface Props {
   players:   PlayerStanding[];
   standings: TeamStanding[];
+  mlbIdByUuid: Record<string, number | null>;
 }
 
-export default function RosterView({ players, standings }: Props) {
+export default function RosterView({ players, standings, mlbIdByUuid }: Props) {
   const [selectedId, setSelectedId] = useState<string>(standings[0]?.team_id ?? '');
 
   const team  = standings.find(t => t.team_id === selectedId) ?? standings[0];
   const color = team ? getTeamColor(team.team_id, team.draft_position) : 'var(--c-accent)';
   const total = team?.total_hrs ?? 0;
+
+  const radarModel = useMemo(
+    () => buildRadarModel(
+      players.map(p => ({ player_id: p.player_id, team_name: p.team_name })),
+      mlbIdByUuid
+    ),
+    [players, mlbIdByUuid]
+  );
 
   const teamPlayers = players
     .filter(p => p.team_name === team?.team_name)
@@ -42,6 +53,18 @@ export default function RosterView({ players, standings }: Props) {
           );
         })}
       </div>
+
+      {team && radarModel.teams[team.team_name] && (
+        <div className="radar-card" style={{ '--team': color } as React.CSSProperties}>
+          <div className="radar-head">
+            <div>
+              <div className="radar-eyebrow">BATTED-BALL PROFILE</div>
+              <div className="radar-title">{team.team_name} · Post Draft Squad Profile</div>
+            </div>
+          </div>
+          <RosterRadar model={radarModel} teamName={team.team_name} color={color} />
+        </div>
+      )}
 
       {team && (
         <div className="roster-card" style={{ '--team': color } as React.CSSProperties}>

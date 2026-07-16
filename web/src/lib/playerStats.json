@@ -1,0 +1,983 @@
+{
+  "_generatedAt": "2026-07-16T20:55:37.123Z",
+  "_source": "dingers_player_data.xlsx :: team_stats",
+  "metrics": [
+    {
+      "key": "exp_home_run",
+      "label": "xHR (2026 YTD)",
+      "fmt": "num1"
+    },
+    {
+      "key": "hr_per_4_pa",
+      "label": "HR / 4 PA",
+      "fmt": "num2"
+    },
+    {
+      "key": "avg_swing_speed",
+      "label": "Swing Speed",
+      "fmt": "num1"
+    },
+    {
+      "key": "launch_angle_avg",
+      "label": "Launch Angle",
+      "fmt": "num1"
+    },
+    {
+      "key": "no_doubter_per",
+      "label": "No-Doubter %",
+      "fmt": "pct"
+    },
+    {
+      "key": "exit_velocity_avg",
+      "label": "Exit Velo",
+      "fmt": "num1"
+    },
+    {
+      "key": "barrel_batted_rate",
+      "label": "Barrel %",
+      "fmt": "pct"
+    }
+  ],
+  "players": {
+    "514888": {
+      "name": "Jose Altuve",
+      "exp_home_run": 9.4,
+      "hr_per_4_pa": 0.14,
+      "avg_swing_speed": 68.7,
+      "launch_angle_avg": 9.5,
+      "no_doubter_per": 0.455,
+      "exit_velocity_avg": 85.8,
+      "barrel_batted_rate": 0.065
+    },
+    "521692": {
+      "name": "Salvador Perez",
+      "exp_home_run": 11.9,
+      "hr_per_4_pa": 0.12,
+      "avg_swing_speed": 71.8,
+      "launch_angle_avg": 16.5,
+      "no_doubter_per": 0.273,
+      "exit_velocity_avg": 89.3,
+      "barrel_batted_rate": 0.094
+    },
+    "545361": {
+      "name": "Mike Trout",
+      "exp_home_run": 20.9,
+      "hr_per_4_pa": 0.2,
+      "avg_swing_speed": 75.1,
+      "launch_angle_avg": 18.2,
+      "no_doubter_per": 0.611,
+      "exit_velocity_avg": 90.7,
+      "barrel_batted_rate": 0.2
+    },
+    "547180": {
+      "name": "Bryce Harper",
+      "exp_home_run": 17.3,
+      "hr_per_4_pa": 0.2,
+      "avg_swing_speed": 74.3,
+      "launch_angle_avg": 11.6,
+      "no_doubter_per": 0.35,
+      "exit_velocity_avg": 90.1,
+      "barrel_batted_rate": 0.113
+    },
+    "553993": {
+      "name": "Eugenio Suárez",
+      "exp_home_run": 8.6,
+      "hr_per_4_pa": 0.16,
+      "avg_swing_speed": 71.5,
+      "launch_angle_avg": 20.1,
+      "no_doubter_per": 0.273,
+      "exit_velocity_avg": 87.9,
+      "barrel_batted_rate": 0.093
+    },
+    "571448": {
+      "name": "Nolan Arenado",
+      "exp_home_run": 10.4,
+      "hr_per_4_pa": 0.14,
+      "avg_swing_speed": 71.4,
+      "launch_angle_avg": 17.9,
+      "no_doubter_per": 0.417,
+      "exit_velocity_avg": 85.2,
+      "barrel_batted_rate": 0.071
+    },
+    "571970": {
+      "name": "Max Muncy",
+      "exp_home_run": 18.1,
+      "hr_per_4_pa": 0.2,
+      "avg_swing_speed": 71.5,
+      "launch_angle_avg": 14.8,
+      "no_doubter_per": 0.471,
+      "exit_velocity_avg": 90.1,
+      "barrel_batted_rate": 0.136
+    },
+    "575929": {
+      "name": "Willson Contreras",
+      "exp_home_run": 17.9,
+      "hr_per_4_pa": 0.22,
+      "avg_swing_speed": 77,
+      "launch_angle_avg": 17.4,
+      "no_doubter_per": 0.6,
+      "exit_velocity_avg": 90.6,
+      "barrel_batted_rate": 0.143
+    },
+    "592450": {
+      "name": "Aaron Judge",
+      "exp_home_run": 16.6,
+      "hr_per_4_pa": 0.26,
+      "avg_swing_speed": 76.1,
+      "launch_angle_avg": 14.6,
+      "no_doubter_per": 0.647,
+      "exit_velocity_avg": 94.1,
+      "barrel_batted_rate": 0.217
+    },
+    "592518": {
+      "name": "Manny Machado",
+      "exp_home_run": 17,
+      "hr_per_4_pa": 0.19,
+      "avg_swing_speed": 74.6,
+      "launch_angle_avg": 12.9,
+      "no_doubter_per": 0.158,
+      "exit_velocity_avg": 90.1,
+      "barrel_batted_rate": 0.104
+    },
+    "592626": {
+      "name": "Joc Pederson",
+      "exp_home_run": 12.1,
+      "hr_per_4_pa": 0.2,
+      "avg_swing_speed": 72,
+      "launch_angle_avg": 14.6,
+      "no_doubter_per": 0.4,
+      "exit_velocity_avg": 91.9,
+      "barrel_batted_rate": 0.112
+    },
+    "596019": {
+      "name": "Francisco Lindor",
+      "exp_home_run": 5.7,
+      "hr_per_4_pa": 0.12,
+      "avg_swing_speed": 72.6,
+      "launch_angle_avg": 14.8,
+      "no_doubter_per": 0.6,
+      "exit_velocity_avg": 92,
+      "barrel_batted_rate": 0.087
+    },
+    "605137": {
+      "name": "Josh Bell",
+      "exp_home_run": 14.9,
+      "hr_per_4_pa": 0.14,
+      "avg_swing_speed": 72.1,
+      "launch_angle_avg": 14.1,
+      "no_doubter_per": 0.462,
+      "exit_velocity_avg": 89.9,
+      "barrel_batted_rate": 0.106
+    },
+    "605141": {
+      "name": "Mookie Betts",
+      "exp_home_run": 8.1,
+      "hr_per_4_pa": 0.17,
+      "avg_swing_speed": 69.5,
+      "launch_angle_avg": 19,
+      "no_doubter_per": 0.091,
+      "exit_velocity_avg": 90.5,
+      "barrel_batted_rate": 0.081
+    },
+    "606466": {
+      "name": "Ketel Marte",
+      "exp_home_run": 18.3,
+      "hr_per_4_pa": 0.17,
+      "avg_swing_speed": 74.6,
+      "launch_angle_avg": 12.4,
+      "no_doubter_per": 0.588,
+      "exit_velocity_avg": 91,
+      "barrel_batted_rate": 0.109
+    },
+    "607208": {
+      "name": "Trea Turner",
+      "exp_home_run": 8.4,
+      "hr_per_4_pa": 0.1,
+      "avg_swing_speed": 71.6,
+      "launch_angle_avg": 10.1,
+      "no_doubter_per": 0.4,
+      "exit_velocity_avg": 88.6,
+      "barrel_batted_rate": 0.061
+    },
+    "621020": {
+      "name": "Dansby Swanson",
+      "exp_home_run": 13,
+      "hr_per_4_pa": 0.18,
+      "avg_swing_speed": 71.5,
+      "launch_angle_avg": 16.8,
+      "no_doubter_per": 0.438,
+      "exit_velocity_avg": 89.9,
+      "barrel_batted_rate": 0.077
+    },
+    "621439": {
+      "name": "Byron Buxton",
+      "exp_home_run": 26,
+      "hr_per_4_pa": 0.3,
+      "avg_swing_speed": 74.2,
+      "launch_angle_avg": 21.2,
+      "no_doubter_per": 0.52,
+      "exit_velocity_avg": 90.7,
+      "barrel_batted_rate": 0.187
+    },
+    "621493": {
+      "name": "Taylor Ward",
+      "exp_home_run": 6,
+      "hr_per_4_pa": 0.05,
+      "avg_swing_speed": 68.2,
+      "launch_angle_avg": 14.6,
+      "no_doubter_per": 0.667,
+      "exit_velocity_avg": 89.4,
+      "barrel_batted_rate": 0.056
+    },
+    "621566": {
+      "name": "Matt Olson",
+      "exp_home_run": 25.7,
+      "hr_per_4_pa": 0.24,
+      "avg_swing_speed": 75,
+      "launch_angle_avg": 17.7,
+      "no_doubter_per": 0.6,
+      "exit_velocity_avg": 92.9,
+      "barrel_batted_rate": 0.139
+    },
+    "624413": {
+      "name": "Pete Alonso",
+      "exp_home_run": 20.8,
+      "hr_per_4_pa": 0.2,
+      "avg_swing_speed": 74.8,
+      "launch_angle_avg": 14.4,
+      "no_doubter_per": 0.333,
+      "exit_velocity_avg": 93.8,
+      "barrel_batted_rate": 0.126
+    },
+    "624585": {
+      "name": "Jorge Soler",
+      "exp_home_run": 11.2,
+      "hr_per_4_pa": 0.14,
+      "avg_swing_speed": 74.9,
+      "launch_angle_avg": 14.5,
+      "no_doubter_per": 0.636,
+      "exit_velocity_avg": 88.2,
+      "barrel_batted_rate": 0.117
+    },
+    "641343": {
+      "name": "Jake Bauers",
+      "exp_home_run": 15.2,
+      "hr_per_4_pa": 0.21,
+      "avg_swing_speed": 76.8,
+      "launch_angle_avg": 11.1,
+      "no_doubter_per": 0.278,
+      "exit_velocity_avg": 92.5,
+      "barrel_batted_rate": 0.141
+    },
+    "641355": {
+      "name": "Cody Bellinger",
+      "exp_home_run": 9.1,
+      "hr_per_4_pa": 0.11,
+      "avg_swing_speed": 69.5,
+      "launch_angle_avg": 17.9,
+      "no_doubter_per": 0.273,
+      "exit_velocity_avg": 88.9,
+      "barrel_batted_rate": 0.066
+    },
+    "641680": {
+      "name": "Jonah Heim",
+      "exp_home_run": 7.7,
+      "hr_per_4_pa": 0.2,
+      "avg_swing_speed": 70.2,
+      "launch_angle_avg": 11.6,
+      "no_doubter_per": 0.222,
+      "exit_velocity_avg": 87.1,
+      "barrel_batted_rate": 0.069
+    },
+    "642715": {
+      "name": "Willy Adames",
+      "exp_home_run": 14.6,
+      "hr_per_4_pa": 0.16,
+      "avg_swing_speed": 72.3,
+      "launch_angle_avg": 22.2,
+      "no_doubter_per": 0.333,
+      "exit_velocity_avg": 88.4,
+      "barrel_batted_rate": 0.088
+    },
+    "645277": {
+      "name": "Ozzie Albies",
+      "exp_home_run": 13,
+      "hr_per_4_pa": 0.14,
+      "avg_swing_speed": 69.1,
+      "launch_angle_avg": 17.5,
+      "no_doubter_per": 0.429,
+      "exit_velocity_avg": 87.2,
+      "barrel_batted_rate": 0.041
+    },
+    "646240": {
+      "name": "Rafael Devers",
+      "exp_home_run": 19.2,
+      "hr_per_4_pa": 0.19,
+      "avg_swing_speed": 71.8,
+      "launch_angle_avg": 14.3,
+      "no_doubter_per": 0.316,
+      "exit_velocity_avg": 92.2,
+      "barrel_batted_rate": 0.117
+    },
+    "650490": {
+      "name": "Yandy Díaz",
+      "exp_home_run": 13.9,
+      "hr_per_4_pa": 0.13,
+      "avg_swing_speed": 73.8,
+      "launch_angle_avg": 6,
+      "no_doubter_per": 0.385,
+      "exit_velocity_avg": 91.1,
+      "barrel_batted_rate": 0.071
+    },
+    "656811": {
+      "name": "Ryan O'Hearn",
+      "exp_home_run": 15.6,
+      "hr_per_4_pa": 0.19,
+      "avg_swing_speed": 70.8,
+      "launch_angle_avg": 13.7,
+      "no_doubter_per": 0.063,
+      "exit_velocity_avg": 89.7,
+      "barrel_batted_rate": 0.081
+    },
+    "656941": {
+      "name": "Kyle Schwarber",
+      "exp_home_run": 28,
+      "hr_per_4_pa": 0.31,
+      "avg_swing_speed": 77.1,
+      "launch_angle_avg": 21.8,
+      "no_doubter_per": 0.469,
+      "exit_velocity_avg": 93.4,
+      "barrel_batted_rate": 0.194
+    },
+    "660271": {
+      "name": "Shohei Ohtani",
+      "exp_home_run": 19.7,
+      "hr_per_4_pa": 0.22,
+      "avg_swing_speed": 74.7,
+      "launch_angle_avg": 12.8,
+      "no_doubter_per": 0.318,
+      "exit_velocity_avg": 93.6,
+      "barrel_batted_rate": 0.171
+    },
+    "660670": {
+      "name": "Ronald Acuña Jr.",
+      "exp_home_run": 8.2,
+      "hr_per_4_pa": 0.12,
+      "avg_swing_speed": 76,
+      "launch_angle_avg": 17.6,
+      "no_doubter_per": 0.714,
+      "exit_velocity_avg": 90.1,
+      "barrel_batted_rate": 0.131
+    },
+    "661388": {
+      "name": "William Contreras",
+      "exp_home_run": 7.9,
+      "hr_per_4_pa": 0.09,
+      "avg_swing_speed": 73.2,
+      "launch_angle_avg": 11.8,
+      "no_doubter_per": 0.556,
+      "exit_velocity_avg": 90.1,
+      "barrel_batted_rate": 0.071
+    },
+    "663728": {
+      "name": "Cal Raleigh",
+      "exp_home_run": 11.1,
+      "hr_per_4_pa": 0.13,
+      "avg_swing_speed": 74.7,
+      "launch_angle_avg": 24,
+      "no_doubter_per": 0.556,
+      "exit_velocity_avg": 88.2,
+      "barrel_batted_rate": 0.11
+    },
+    "664023": {
+      "name": "Ian Happ",
+      "exp_home_run": 18.9,
+      "hr_per_4_pa": 0.17,
+      "avg_swing_speed": 72.2,
+      "launch_angle_avg": 15.8,
+      "no_doubter_per": 0.588,
+      "exit_velocity_avg": 89.6,
+      "barrel_batted_rate": 0.124
+    },
+    "664040": {
+      "name": "Brandon Lowe",
+      "exp_home_run": 21.7,
+      "hr_per_4_pa": 0.21,
+      "avg_swing_speed": 73.7,
+      "launch_angle_avg": 16.9,
+      "no_doubter_per": 0.524,
+      "exit_velocity_avg": 90.9,
+      "barrel_batted_rate": 0.125
+    },
+    "664983": {
+      "name": "Jake McCarthy",
+      "exp_home_run": 7.8,
+      "hr_per_4_pa": 0.13,
+      "avg_swing_speed": 71.1,
+      "launch_angle_avg": 12.3,
+      "no_doubter_per": 0.4,
+      "exit_velocity_avg": 85,
+      "barrel_batted_rate": 0.061
+    },
+    "665742": {
+      "name": "Juan Soto",
+      "exp_home_run": 22.5,
+      "hr_per_4_pa": 0.25,
+      "avg_swing_speed": 72,
+      "launch_angle_avg": 15.9,
+      "no_doubter_per": 0.524,
+      "exit_velocity_avg": 92.6,
+      "barrel_batted_rate": 0.15
+    },
+    "665833": {
+      "name": "Oneil Cruz",
+      "exp_home_run": 13.8,
+      "hr_per_4_pa": 0.2,
+      "avg_swing_speed": 78.5,
+      "launch_angle_avg": 7.6,
+      "no_doubter_per": 0.5,
+      "exit_velocity_avg": 96,
+      "barrel_batted_rate": 0.167
+    },
+    "665862": {
+      "name": "Jazz Chisholm Jr.",
+      "exp_home_run": 13.1,
+      "hr_per_4_pa": 0.14,
+      "avg_swing_speed": 73.1,
+      "launch_angle_avg": 16.2,
+      "no_doubter_per": 0.462,
+      "exit_velocity_avg": 90.7,
+      "barrel_batted_rate": 0.088
+    },
+    "666160": {
+      "name": "Mickey Moniak",
+      "exp_home_run": 12.7,
+      "hr_per_4_pa": 0.26,
+      "avg_swing_speed": 74.4,
+      "launch_angle_avg": 22.6,
+      "no_doubter_per": 0.6,
+      "exit_velocity_avg": 89.6,
+      "barrel_batted_rate": 0.124
+    },
+    "666176": {
+      "name": "Jo Adell",
+      "exp_home_run": 14.8,
+      "hr_per_4_pa": 0.13,
+      "avg_swing_speed": 77.3,
+      "launch_angle_avg": 17.1,
+      "no_doubter_per": 0.538,
+      "exit_velocity_avg": 89.7,
+      "barrel_batted_rate": 0.085
+    },
+    "666182": {
+      "name": "Bo Bichette",
+      "exp_home_run": 10.1,
+      "hr_per_4_pa": 0.1,
+      "avg_swing_speed": 70.1,
+      "launch_angle_avg": 8.5,
+      "no_doubter_per": 0.3,
+      "exit_velocity_avg": 90.3,
+      "barrel_batted_rate": 0.071
+    },
+    "668709": {
+      "name": "JJ Bleday",
+      "exp_home_run": 13.4,
+      "hr_per_4_pa": 0.23,
+      "avg_swing_speed": 73.8,
+      "launch_angle_avg": 21.2,
+      "no_doubter_per": 0.375,
+      "exit_velocity_avg": 89,
+      "barrel_batted_rate": 0.103
+    },
+    "668930": {
+      "name": "Brice Turang",
+      "exp_home_run": 10.6,
+      "hr_per_4_pa": 0.13,
+      "avg_swing_speed": 70,
+      "launch_angle_avg": 7.9,
+      "no_doubter_per": 0.214,
+      "exit_velocity_avg": 90.9,
+      "barrel_batted_rate": 0.085
+    },
+    "669016": {
+      "name": "Brandon Marsh",
+      "exp_home_run": 11.1,
+      "hr_per_4_pa": 0.17,
+      "avg_swing_speed": 71.5,
+      "launch_angle_avg": 13.2,
+      "no_doubter_per": 0.267,
+      "exit_velocity_avg": 89.8,
+      "barrel_batted_rate": 0.094
+    },
+    "669127": {
+      "name": "Shea Langeliers",
+      "exp_home_run": 17.6,
+      "hr_per_4_pa": 0.22,
+      "avg_swing_speed": 75.2,
+      "launch_angle_avg": 19.9,
+      "no_doubter_per": 0.381,
+      "exit_velocity_avg": 91.8,
+      "barrel_batted_rate": 0.147
+    },
+    "669477": {
+      "name": "Casey Schmitt",
+      "exp_home_run": 17.4,
+      "hr_per_4_pa": 0.21,
+      "avg_swing_speed": 72.6,
+      "launch_angle_avg": 21.5,
+      "no_doubter_per": 0.632,
+      "exit_velocity_avg": 90,
+      "barrel_batted_rate": 0.124
+    },
+    "670042": {
+      "name": "Luke Raley",
+      "exp_home_run": 12.7,
+      "hr_per_4_pa": 0.22,
+      "avg_swing_speed": 75.1,
+      "launch_angle_avg": 15.5,
+      "no_doubter_per": 0.357,
+      "exit_velocity_avg": 90.6,
+      "barrel_batted_rate": 0.161
+    },
+    "670541": {
+      "name": "Yordan Alvarez",
+      "exp_home_run": 35.3,
+      "hr_per_4_pa": 0.3,
+      "avg_swing_speed": 76.1,
+      "launch_angle_avg": 19.8,
+      "no_doubter_per": 0.613,
+      "exit_velocity_avg": 94.7,
+      "barrel_batted_rate": 0.187
+    },
+    "670623": {
+      "name": "Isaac Paredes",
+      "exp_home_run": 10.8,
+      "hr_per_4_pa": 0.13,
+      "avg_swing_speed": 67.6,
+      "launch_angle_avg": 24,
+      "no_doubter_per": 0.5,
+      "exit_velocity_avg": 86.7,
+      "barrel_batted_rate": 0.059
+    },
+    "671277": {
+      "name": "Luis García Jr.",
+      "exp_home_run": 17.7,
+      "hr_per_4_pa": 0.25,
+      "avg_swing_speed": 73.6,
+      "launch_angle_avg": 11.5,
+      "no_doubter_per": 0.35,
+      "exit_velocity_avg": 91.9,
+      "barrel_batted_rate": 0.107
+    },
+    "671739": {
+      "name": "Michael Harris II",
+      "exp_home_run": 16.1,
+      "hr_per_4_pa": 0.18,
+      "avg_swing_speed": 74.8,
+      "launch_angle_avg": 10.4,
+      "no_doubter_per": 0.375,
+      "exit_velocity_avg": 91.7,
+      "barrel_batted_rate": 0.13
+    },
+    "672960": {
+      "name": "Kazuma Okamoto",
+      "exp_home_run": 20.2,
+      "hr_per_4_pa": 0.23,
+      "avg_swing_speed": 73.2,
+      "launch_angle_avg": 17.1,
+      "no_doubter_per": 0.364,
+      "exit_velocity_avg": 91.5,
+      "barrel_batted_rate": 0.148
+    },
+    "673548": {
+      "name": "Seiya Suzuki",
+      "exp_home_run": 15.4,
+      "hr_per_4_pa": 0.17,
+      "avg_swing_speed": 73.3,
+      "launch_angle_avg": 18.3,
+      "no_doubter_per": 0.467,
+      "exit_velocity_avg": 89,
+      "barrel_batted_rate": 0.092
+    },
+    "676391": {
+      "name": "Ernie Clement",
+      "exp_home_run": 7.5,
+      "hr_per_4_pa": 0.09,
+      "avg_swing_speed": 67.4,
+      "launch_angle_avg": 15.9,
+      "no_doubter_per": 0.125,
+      "exit_velocity_avg": 85.2,
+      "barrel_batted_rate": 0.025
+    },
+    "677594": {
+      "name": "Julio Rodríguez",
+      "exp_home_run": 15.7,
+      "hr_per_4_pa": 0.15,
+      "avg_swing_speed": 76.5,
+      "launch_angle_avg": 12.5,
+      "no_doubter_per": 0.571,
+      "exit_velocity_avg": 90.2,
+      "barrel_batted_rate": 0.091
+    },
+    "677800": {
+      "name": "Wilyer Abreu",
+      "exp_home_run": 13.5,
+      "hr_per_4_pa": 0.11,
+      "avg_swing_speed": 73.8,
+      "launch_angle_avg": 18.3,
+      "no_doubter_per": 0.364,
+      "exit_velocity_avg": 90.1,
+      "barrel_batted_rate": 0.123
+    },
+    "677951": {
+      "name": "Bobby Witt Jr.",
+      "exp_home_run": 11,
+      "hr_per_4_pa": 0.13,
+      "avg_swing_speed": 73.7,
+      "launch_angle_avg": 16.6,
+      "no_doubter_per": 0.462,
+      "exit_velocity_avg": 93.2,
+      "barrel_batted_rate": 0.121
+    },
+    "678246": {
+      "name": "Miguel Vargas",
+      "exp_home_run": 22.6,
+      "hr_per_4_pa": 0.21,
+      "avg_swing_speed": 74.1,
+      "launch_angle_avg": 19.7,
+      "no_doubter_per": 0.571,
+      "exit_velocity_avg": 90.6,
+      "barrel_batted_rate": 0.154
+    },
+    "678554": {
+      "name": "Curtis Mead",
+      "exp_home_run": 16.2,
+      "hr_per_4_pa": 0.23,
+      "avg_swing_speed": 72.6,
+      "launch_angle_avg": 15.8,
+      "no_doubter_per": 0.529,
+      "exit_velocity_avg": 87.9,
+      "barrel_batted_rate": 0.119
+    },
+    "681624": {
+      "name": "Andy Pages",
+      "exp_home_run": 14.5,
+      "hr_per_4_pa": 0.17,
+      "avg_swing_speed": 73,
+      "launch_angle_avg": 16.6,
+      "no_doubter_per": 0.471,
+      "exit_velocity_avg": 89.1,
+      "barrel_batted_rate": 0.086
+    },
+    "682829": {
+      "name": "Elly De La Cruz",
+      "exp_home_run": 13.4,
+      "hr_per_4_pa": 0.18,
+      "avg_swing_speed": 75.1,
+      "launch_angle_avg": 11.1,
+      "no_doubter_per": 0.267,
+      "exit_velocity_avg": 94.4,
+      "barrel_batted_rate": 0.153
+    },
+    "682928": {
+      "name": "CJ Abrams",
+      "exp_home_run": 18.9,
+      "hr_per_4_pa": 0.2,
+      "avg_swing_speed": 72.8,
+      "launch_angle_avg": 18.7,
+      "no_doubter_per": 0.3,
+      "exit_velocity_avg": 89.9,
+      "barrel_batted_rate": 0.098
+    },
+    "682985": {
+      "name": "Riley Greene",
+      "exp_home_run": 12.3,
+      "hr_per_4_pa": 0.13,
+      "avg_swing_speed": 75.7,
+      "launch_angle_avg": 18.2,
+      "no_doubter_per": 0.462,
+      "exit_velocity_avg": 91.4,
+      "barrel_batted_rate": 0.138
+    },
+    "682998": {
+      "name": "Corbin Carroll",
+      "exp_home_run": 15,
+      "hr_per_4_pa": 0.13,
+      "avg_swing_speed": 75.6,
+      "launch_angle_avg": 13.2,
+      "no_doubter_per": 0.385,
+      "exit_velocity_avg": 91.3,
+      "barrel_batted_rate": 0.111
+    },
+    "683002": {
+      "name": "Gunnar Henderson",
+      "exp_home_run": 15.6,
+      "hr_per_4_pa": 0.15,
+      "avg_swing_speed": 74.4,
+      "launch_angle_avg": 11.9,
+      "no_doubter_per": 0.353,
+      "exit_velocity_avg": 89.7,
+      "barrel_batted_rate": 0.073
+    },
+    "683953": {
+      "name": "Travis Bazzana",
+      "exp_home_run": 7.4,
+      "hr_per_4_pa": 0.1,
+      "avg_swing_speed": 69.8,
+      "launch_angle_avg": 14.5,
+      "no_doubter_per": 0.286,
+      "exit_velocity_avg": 88.1,
+      "barrel_batted_rate": 0.043
+    },
+    "686527": {
+      "name": "Dominic Canzone",
+      "exp_home_run": 13.9,
+      "hr_per_4_pa": 0.24,
+      "avg_swing_speed": 74.8,
+      "launch_angle_avg": 9.6,
+      "no_doubter_per": 0.467,
+      "exit_velocity_avg": 92.8,
+      "barrel_batted_rate": 0.153
+    },
+    "686797": {
+      "name": "Brooks Lee",
+      "exp_home_run": 10.6,
+      "hr_per_4_pa": 0.15,
+      "avg_swing_speed": 70.2,
+      "launch_angle_avg": 15,
+      "no_doubter_per": 0.286,
+      "exit_velocity_avg": 88,
+      "barrel_batted_rate": 0.039
+    },
+    "686948": {
+      "name": "Drake Baldwin",
+      "exp_home_run": 12.6,
+      "hr_per_4_pa": 0.19,
+      "avg_swing_speed": 75,
+      "launch_angle_avg": 11.4,
+      "no_doubter_per": 0.2,
+      "exit_velocity_avg": 91.4,
+      "barrel_batted_rate": 0.153
+    },
+    "687263": {
+      "name": "Zach Neto",
+      "exp_home_run": 19.9,
+      "hr_per_4_pa": 0.18,
+      "avg_swing_speed": 71,
+      "launch_angle_avg": 22.1,
+      "no_doubter_per": 0.579,
+      "exit_velocity_avg": 89.5,
+      "barrel_batted_rate": 0.13
+    },
+    "689414": {
+      "name": "Liam Hicks",
+      "exp_home_run": 11.6,
+      "hr_per_4_pa": 0.15,
+      "avg_swing_speed": 68.5,
+      "launch_angle_avg": 13.5,
+      "no_doubter_per": 0.231,
+      "exit_velocity_avg": 85.4,
+      "barrel_batted_rate": 0.036
+    },
+    "691016": {
+      "name": "Tyler Soderstrom",
+      "exp_home_run": 9.1,
+      "hr_per_4_pa": 0.16,
+      "avg_swing_speed": 74.5,
+      "launch_angle_avg": 12,
+      "no_doubter_per": 0.214,
+      "exit_velocity_avg": 90.1,
+      "barrel_batted_rate": 0.101
+    },
+    "691023": {
+      "name": "Jordan Walker",
+      "exp_home_run": 20.5,
+      "hr_per_4_pa": 0.22,
+      "avg_swing_speed": 79.2,
+      "launch_angle_avg": 11.5,
+      "no_doubter_per": 0.5,
+      "exit_velocity_avg": 94.2,
+      "barrel_batted_rate": 0.141
+    },
+    "691406": {
+      "name": "Junior Caminero",
+      "exp_home_run": 26,
+      "hr_per_4_pa": 0.27,
+      "avg_swing_speed": 79.9,
+      "launch_angle_avg": 8.7,
+      "no_doubter_per": 0.679,
+      "exit_velocity_avg": 93.2,
+      "barrel_batted_rate": 0.136
+    },
+    "691718": {
+      "name": "Pete Crow-Armstrong",
+      "exp_home_run": 19.8,
+      "hr_per_4_pa": 0.2,
+      "avg_swing_speed": 74.8,
+      "launch_angle_avg": 20.1,
+      "no_doubter_per": 0.381,
+      "exit_velocity_avg": 90.2,
+      "barrel_batted_rate": 0.107
+    },
+    "693307": {
+      "name": "Dillon Dingler",
+      "exp_home_run": 17.5,
+      "hr_per_4_pa": 0.21,
+      "avg_swing_speed": 72,
+      "launch_angle_avg": 17.6,
+      "no_doubter_per": 0.421,
+      "exit_velocity_avg": 89.7,
+      "barrel_batted_rate": 0.116
+    },
+    "694192": {
+      "name": "Jackson Chourio",
+      "exp_home_run": 9.9,
+      "hr_per_4_pa": 0.18,
+      "avg_swing_speed": 74.8,
+      "launch_angle_avg": 13.5,
+      "no_doubter_per": 0.231,
+      "exit_velocity_avg": 92.2,
+      "barrel_batted_rate": 0.135
+    },
+    "694212": {
+      "name": "Samuel Basallo",
+      "exp_home_run": 13,
+      "hr_per_4_pa": 0.21,
+      "avg_swing_speed": 74.6,
+      "launch_angle_avg": 11.3,
+      "no_doubter_per": 0.313,
+      "exit_velocity_avg": 91.5,
+      "barrel_batted_rate": 0.131
+    },
+    "695506": {
+      "name": "Jac Caglianone",
+      "exp_home_run": 15.6,
+      "hr_per_4_pa": 0.17,
+      "avg_swing_speed": 77.3,
+      "launch_angle_avg": 7.3,
+      "no_doubter_per": 0.733,
+      "exit_velocity_avg": 93,
+      "barrel_batted_rate": 0.147
+    },
+    "695578": {
+      "name": "James Wood",
+      "exp_home_run": 29.7,
+      "hr_per_4_pa": 0.25,
+      "avg_swing_speed": 76.8,
+      "launch_angle_avg": 9.8,
+      "no_doubter_per": 0.643,
+      "exit_velocity_avg": 95,
+      "barrel_batted_rate": 0.227
+    },
+    "695600": {
+      "name": "Carter Jensen",
+      "exp_home_run": 12.2,
+      "hr_per_4_pa": 0.15,
+      "avg_swing_speed": 73.9,
+      "launch_angle_avg": 20.2,
+      "no_doubter_per": 0.462,
+      "exit_velocity_avg": 90.8,
+      "barrel_batted_rate": 0.094
+    },
+    "695657": {
+      "name": "Colson Montgomery",
+      "exp_home_run": 23.1,
+      "hr_per_4_pa": 0.24,
+      "avg_swing_speed": 76.3,
+      "launch_angle_avg": 23,
+      "no_doubter_per": 0.478,
+      "exit_velocity_avg": 89.2,
+      "barrel_batted_rate": 0.137
+    },
+    "696100": {
+      "name": "Hunter Goodman",
+      "exp_home_run": 22,
+      "hr_per_4_pa": 0.29,
+      "avg_swing_speed": 75.3,
+      "launch_angle_avg": 18,
+      "no_doubter_per": 0.519,
+      "exit_velocity_avg": 91.2,
+      "barrel_batted_rate": 0.166
+    },
+    "700250": {
+      "name": "Ben Rice",
+      "exp_home_run": 27.5,
+      "hr_per_4_pa": 0.3,
+      "avg_swing_speed": 72.6,
+      "launch_angle_avg": 14.2,
+      "no_doubter_per": 0.241,
+      "exit_velocity_avg": 92.1,
+      "barrel_batted_rate": 0.153
+    },
+    "701398": {
+      "name": "Sal Stewart",
+      "exp_home_run": 16.4,
+      "hr_per_4_pa": 0.18,
+      "avg_swing_speed": 72.6,
+      "launch_angle_avg": 13.8,
+      "no_doubter_per": 0.158,
+      "exit_velocity_avg": 90.6,
+      "barrel_batted_rate": 0.149
+    },
+    "701538": {
+      "name": "Jackson Merrill",
+      "exp_home_run": 9.3,
+      "hr_per_4_pa": 0.1,
+      "avg_swing_speed": 73.4,
+      "launch_angle_avg": 12.9,
+      "no_doubter_per": 0.5,
+      "exit_velocity_avg": 89.4,
+      "barrel_batted_rate": 0.091
+    },
+    "701762": {
+      "name": "Nick Kurtz",
+      "exp_home_run": 16.9,
+      "hr_per_4_pa": 0.19,
+      "avg_swing_speed": 78.3,
+      "launch_angle_avg": 12.4,
+      "no_doubter_per": 0.4,
+      "exit_velocity_avg": 93.6,
+      "barrel_batted_rate": 0.181
+    },
+    "702284": {
+      "name": "Cole Young",
+      "exp_home_run": 11,
+      "hr_per_4_pa": 0.11,
+      "avg_swing_speed": 71.7,
+      "launch_angle_avg": 14.7,
+      "no_doubter_per": 0.273,
+      "exit_velocity_avg": 88.6,
+      "barrel_batted_rate": 0.05
+    },
+    "702616": {
+      "name": "Jackson Holliday",
+      "exp_home_run": 3.7,
+      "hr_per_4_pa": 0.14,
+      "avg_swing_speed": 70.5,
+      "launch_angle_avg": 12.7,
+      "no_doubter_per": 0.2,
+      "exit_velocity_avg": 87.3,
+      "barrel_batted_rate": 0.107
+    },
+    "802139": {
+      "name": "JJ Wetherholt",
+      "exp_home_run": 11.2,
+      "hr_per_4_pa": 0.13,
+      "avg_swing_speed": 72.4,
+      "launch_angle_avg": 13.7,
+      "no_doubter_per": 0.231,
+      "exit_velocity_avg": 90,
+      "barrel_batted_rate": 0.073
+    },
+    "808959": {
+      "name": "Munetaka Murakami",
+      "exp_home_run": 17.5,
+      "hr_per_4_pa": 0.31,
+      "avg_swing_speed": 75.2,
+      "launch_angle_avg": 14,
+      "no_doubter_per": 0.65,
+      "exit_velocity_avg": 94.1,
+      "barrel_batted_rate": 0.2
+    }
+  }
+}

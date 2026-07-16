@@ -769,6 +769,7 @@ body::before {
 .rtab.is-on .rtab-hrs { opacity: 0.7; }
 
 .roster-card {
+  margin-top: 18px;
   background: var(--c-surface); border: 1px solid var(--c-border);
   border-top: 3px solid var(--team, var(--c-accent));
   border-radius: 12px; overflow: hidden;
@@ -800,6 +801,76 @@ body::before {
 .rcard-bar        { height: 4px; background: var(--c-border); border-radius: 2px; overflow: hidden; margin-top: 6px; }
 .rcard-bar-fill   { height: 100%; border-radius: 2px; transition: width 0.6s cubic-bezier(.2,.8,.2,1); }
 .rcard-pct        { font-family: var(--font-mono); font-size: 9px; color: var(--c-textDim); }
+
+/* ─── Roster radar ───────────────────────────────────────────────────────────── */
+.radar-card {
+  margin-top: 18px;
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-top: 3px solid var(--team, var(--c-accent));
+  border-radius: 12px; overflow: hidden;
+}
+.radar-head {
+  padding: 18px 22px 14px; border-bottom: 1px solid var(--c-border);
+}
+.radar-eyebrow { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; color: var(--c-textDim); margin-bottom: 4px; }
+.radar-title   { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--c-bone); letter-spacing: -0.01em; }
+
+.radar-wrap {
+  display: grid; grid-template-columns: minmax(420px, 1.25fr) minmax(300px, 1fr);
+  gap: 20px; padding: 22px 24px 24px; align-items: center;
+}
+@media (max-width: 720px) {
+  .radar-wrap { grid-template-columns: 1fr; gap: 18px; padding: 16px 14px 18px; }
+  .radar-svg  { max-width: 360px; }
+  .radar-legend { justify-content: center; }
+}
+
+.radar-chart { display: flex; justify-content: center; }
+.radar-svg   { width: 100%; max-width: 540px; height: auto; overflow: visible; }
+.radar-axis-label {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.06em;
+  fill: var(--c-textDim); transition: fill 0.15s;
+}
+.radar-axis-label.is-hot { fill: var(--c-bone); }
+.radar-axis-value {
+  font-family: var(--font-digital); font-size: 12px; font-weight: 900;
+  fill: var(--c-textMuted); transition: fill 0.15s;
+}
+
+.radar-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.radar-legend { display: flex; gap: 16px; }
+.radar-legend-row { display: flex; align-items: center; gap: 6px; }
+.radar-swatch { width: 12px; height: 12px; border-radius: 3px; }
+.radar-swatch.is-league {
+  background: transparent; border: 1.5px dashed var(--c-textDim); border-radius: 2px;
+}
+.radar-legend-name { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--c-textDim); }
+
+.radar-readout { display: flex; flex-direction: column; gap: 8px; }
+.radar-stat {
+  padding: 6px 8px; border-radius: 7px; border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+.radar-stat.is-hot { background: var(--c-surfaceHi); border-color: var(--c-border); }
+.radar-stat-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.radar-stat-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--c-textDim); }
+.radar-stat-val   { font-family: var(--font-digital); font-size: 15px; font-weight: 900; color: var(--c-bone); }
+.radar-stat-bar {
+  position: relative; height: 6px; margin: 6px 0 5px;
+  background: var(--c-border); border-radius: 3px;
+}
+.radar-stat-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(.2,.8,.2,1); }
+.radar-stat-league {
+  position: absolute; top: -3px; width: 2px; height: 12px;
+  background: var(--c-bone); border-radius: 1px;
+  transform: translateX(-1px);
+  box-shadow: 0 0 0 1.5px var(--c-surface);
+}
+.radar-stat-delta { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.04em; }
+.radar-stat-delta.is-up   { color: var(--c-legit); }
+.radar-stat-delta.is-down { color: var(--c-foul); }
+.radar-foot { font-family: var(--font-mono); font-size: 9px; line-height: 1.5; color: var(--c-textDim); margin: 0; }
+.radar-warn { color: var(--c-mickey); }
 
 /* ─── Pool ───────────────────────────────────────────────────────────────────── */
 .pool-controls { display: flex; flex-direction: column; gap: 12px; }
