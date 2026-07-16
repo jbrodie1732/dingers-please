@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-07-16T20:55:37.123Z",
+  "_generatedAt": "2026-07-16T21:53:21.620Z",
   "_source": "dingers_player_data.xlsx :: team_stats",
   "metrics": [
     {
@@ -389,6 +389,16 @@
       "exit_velocity_avg": 88.2,
       "barrel_batted_rate": 0.11
     },
+    "663757": {
+      "name": "Trent Grisham",
+      "exp_home_run": 9,
+      "hr_per_4_pa": 0.13,
+      "avg_swing_speed": 70.2,
+      "launch_angle_avg": 17.3,
+      "no_doubter_per": 0.4,
+      "exit_velocity_avg": 91.1,
+      "barrel_batted_rate": 0.109
+    },
     "664023": {
       "name": "Ian Happ",
       "exp_home_run": 18.9,
@@ -489,6 +499,16 @@
       "exit_velocity_avg": 89,
       "barrel_batted_rate": 0.103
     },
+    "668904": {
+      "name": "Royce Lewis",
+      "exp_home_run": 11.7,
+      "hr_per_4_pa": 0.16,
+      "avg_swing_speed": 74.5,
+      "launch_angle_avg": 19.7,
+      "no_doubter_per": 0.7,
+      "exit_velocity_avg": 89.1,
+      "barrel_batted_rate": 0.13
+    },
     "668930": {
       "name": "Brice Turang",
       "exp_home_run": 10.6,
@@ -558,6 +578,16 @@
       "no_doubter_per": 0.5,
       "exit_velocity_avg": 86.7,
       "barrel_batted_rate": 0.059
+    },
+    "671056": {
+      "name": "Iván Herrera",
+      "exp_home_run": 11.7,
+      "hr_per_4_pa": 0.1,
+      "avg_swing_speed": 73.9,
+      "launch_angle_avg": 9.4,
+      "no_doubter_per": 0.818,
+      "exit_velocity_avg": 89.2,
+      "barrel_batted_rate": 0.058
     },
     "671277": {
       "name": "Luis García Jr.",
@@ -658,6 +688,16 @@
       "no_doubter_per": 0.529,
       "exit_velocity_avg": 87.9,
       "barrel_batted_rate": 0.119
+    },
+    "681297": {
+      "name": "Colton Cowser",
+      "exp_home_run": 7.9,
+      "hr_per_4_pa": 0.14,
+      "avg_swing_speed": 74.9,
+      "launch_angle_avg": 13.2,
+      "no_doubter_per": 0.875,
+      "exit_velocity_avg": 86.8,
+      "barrel_batted_rate": 0.113
     },
     "681624": {
       "name": "Andy Pages",
@@ -968,6 +1008,16 @@
       "no_doubter_per": 0.231,
       "exit_velocity_avg": 90,
       "barrel_batted_rate": 0.073
+    },
+    "805811": {
+      "name": "Bryce Eldridge",
+      "exp_home_run": 8.5,
+      "hr_per_4_pa": 0.15,
+      "avg_swing_speed": 73.7,
+      "launch_angle_avg": 13.2,
+      "no_doubter_per": 0.375,
+      "exit_velocity_avg": 92.3,
+      "barrel_batted_rate": 0.125
     },
     "808959": {
       "name": "Munetaka Murakami",
