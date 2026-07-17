@@ -15,6 +15,17 @@ function getDongLabel(count) {
 }
 
 function buildAlertMessage({ playerName, playerTotal, distance, fantasyTeam, teamTotal, rank, mickeyCount, mickeyLabel }) {
+  // Easter egg: the Cole Young draft-night bit. Keep the DINGER ALERT header
+  // and the Player line, then drop the running joke in place of the usual
+  // stat block. Matches on name (case-insensitive) so it fires for his HRs only.
+  if (String(playerName).trim().toLowerCase() === 'cole young') {
+    return [
+      '🚨 DINGER ALERT 🚨',
+      `Player: ${playerName} (${playerTotal})`,
+      "did anyone draft him? i'm not sure if this text is going through",
+    ].join('\n');
+  }
+
   const distStr = distance != null ? `${distance} ft.` : 'N/A';
   const lines = [
     '🚨 DINGER ALERT 🚨',
