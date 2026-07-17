@@ -327,13 +327,15 @@ body::before {
 @media (max-width: 1100px) { .standings-grid { grid-template-columns: 1fr; } }
 
 .board-scroll { overflow-x: auto; }
-.board-table { padding: 4px 0; min-width: 448px; }
+.board-table { padding: 4px 0; }
 .board-row {
   display: grid;
-  /* Fixed team/HR/DB widths so extra width flows into the VS-LEADER bar (not a
+  /* Fixed rank/team/HR/DB so extra width flows into the VS-LEADER bar (not a
      giant trailing gap after the team name), and every row stays aligned —
-     content-based widths would differ row-to-row since each row is its own grid. */
-  grid-template-columns: 40px 124px 64px 64px minmax(0, 1fr);
+     content-based widths would differ row-to-row since each row is its own grid.
+     Team is kept close to the name width and HR/DB are centered so they don't
+     sit far to the right. Mobile shrinks these further (see media query). */
+  grid-template-columns: 40px 96px 64px 64px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   padding: 10px 18px;
@@ -404,7 +406,7 @@ body::before {
   font-weight: 700;
   mix-blend-mode: screen;
 }
-.bcol-num { justify-content: flex-end; }
+.bcol-num { justify-content: center; }
 .num-big  {
   font-family: var(--font-digital);
   font-size: 26px;
@@ -413,9 +415,24 @@ body::before {
   letter-spacing: 0.04em;
 }
 .is-leader .num-big { color: var(--c-accent); }
-.bcol-gap { justify-content: flex-end; }
+.bcol-gap { justify-content: center; }
 .gap-num    { font-family: var(--font-mono); font-size: 12px; color: var(--c-textMuted); }
 .gap-leader { font-family: var(--font-mono); color: var(--c-accent); }
+
+/* Mobile: shrink the fixed columns + padding so the whole board fits the phone
+   width (no horizontal scroll) and the VS-LEADER bar keeps a usable width. */
+@media (max-width: 560px) {
+  .board-head { padding-left: 12px; padding-right: 12px; }
+  .board-row {
+    grid-template-columns: 30px 90px 42px 42px minmax(0, 1fr);
+    gap: 8px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .rank-num { font-size: 18px; }
+  .num-big  { font-size: 22px; }
+  .bcol-bar { padding-left: 8px; }
+}
 
 /* ─── Feed ───────────────────────────────────────────────────────────────────── */
 .feed-list  { padding: 8px; display: flex; flex-direction: column; gap: 4px; max-height: 720px; overflow-y: auto; }
