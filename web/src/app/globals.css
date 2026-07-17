@@ -330,7 +330,7 @@ body::before {
 .board-table { padding: 4px 0; min-width: 560px; }
 .board-row {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1.4fr) minmax(0, 2fr) 80px 60px;
+  grid-template-columns: 44px minmax(0, 1.4fr) 80px 60px minmax(0, 2fr);
   align-items: center;
   gap: 12px;
   padding: 10px 18px;
@@ -564,9 +564,10 @@ body::before {
 }
 .pb-spd:hover { color: var(--c-text); }
 .pb-spd.is-on { background: var(--c-accent); color: #000; font-weight: 700; }
-.pb-track-wrap { flex: 1; display: flex; align-items: center; gap: 14px; }
+.pb-track-wrap { flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; }
 .pb-track {
   flex: 1;
+  min-width: 0;
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
@@ -605,6 +606,15 @@ body::before {
   white-space: nowrap;
   min-width: 120px;
   text-align: right;
+}
+
+/* Mobile: stack the playback bar so the slider gets its own full-width row
+   instead of overflowing the tile (flex children couldn't shrink before). */
+@media (max-width: 640px) {
+  .playback-bar { flex-wrap: wrap; gap: 12px; padding: 12px 14px; }
+  .pb-controls { width: 100%; justify-content: center; }
+  .pb-track-wrap { flex-basis: 100%; width: 100%; gap: 10px; }
+  .pb-stamp { min-width: 0; font-size: 10px; }
 }
 
 /* ─── RT live leaderboard ────────────────────────────────────────────────────── */
@@ -1578,7 +1588,8 @@ body::before {
 .tk-team {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  align-items: baseline; gap: 6px;
+  align-items: center; gap: 6px;
+  min-height: 24px;
   color: var(--c-textMuted);
 }
 .tk-team.is-winner { color: var(--c-bone); }

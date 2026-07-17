@@ -51,12 +51,12 @@ function StatusChip({ g }: { g: TickerGame }) {
   return <span className="tk-status is-pre">{startTime(g.startsAt)}</span>;
 }
 
-function TeamRow({ t, winner }: { t: TeamSide; winner: boolean }) {
+function TeamRow({ t, winner, showScore }: { t: TeamSide; winner: boolean; showScore: boolean }) {
   return (
     <div className={`tk-team${winner ? ' is-winner' : ''}`}>
       <span className="tk-abbr">{t.abbr}</span>
       {t.record && <span className="tk-rec">{t.record}</span>}
-      <span className="tk-score">{t.score ?? ''}</span>
+      <span className="tk-score">{showScore ? (t.score ?? '') : ''}</span>
     </div>
   );
 }
@@ -75,6 +75,7 @@ function GameCard({
   const homeWon = decided && (g.home.score as number) > (g.away.score as number);
   const n = g.rostered.length;
   const interactive = n > 0;
+  const showScore = g.state !== 'pre';
 
   return (
     <div
@@ -91,8 +92,8 @@ function GameCard({
           <span className="tk-outs">{g.outs} out{g.outs === 1 ? '' : 's'}</span>
         )}
       </div>
-      <TeamRow t={g.away} winner={awayWon} />
-      <TeamRow t={g.home} winner={homeWon} />
+      <TeamRow t={g.away} winner={awayWon} showScore={showScore} />
+      <TeamRow t={g.home} winner={homeWon} showScore={showScore} />
       <div className={`tk-pool${n > 0 ? '' : ' is-none'}`}>
         {n > 0 ? (
           <>

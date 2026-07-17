@@ -41,7 +41,7 @@ export default async function HomePage() {
     <div className="screen">
       <div className="hero-header">
         <div className="hero-eyebrow">SEASON 2026</div>
-        <h1 className="hero-title">Dingers, Please. TYSM</h1>
+        <h1 className="hero-title">TYSM.</h1>
         <div className="hero-meta">
           <span><b>{totalHRs}</b> dingers logged</span>
           <span className="dot-sep">·</span>

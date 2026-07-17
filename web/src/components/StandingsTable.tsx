@@ -59,9 +59,9 @@ export default function StandingsTable({ initialStandings }: Props) {
         <div className="board-row board-head">
           <div className="bcol bcol-rank">#</div>
           <div className="bcol bcol-team">TEAM</div>
-          <div className="bcol bcol-bar">PACE</div>
           <div className="bcol bcol-num">HR</div>
           <div className="bcol bcol-gap">DB</div>
+          <div className="bcol bcol-bar">VS. LEADER</div>
         </div>
 
         {sorted.map((t, i) => {
@@ -92,16 +92,6 @@ export default function StandingsTable({ initialStandings }: Props) {
                 </div>
               </div>
 
-              <div className="bcol bcol-bar">
-                <div className="bar-track">
-                  <div
-                    className="bar-fill"
-                    style={{ width: `${pct * 100}%`, background: color, color }}
-                  />
-                  {isLeader && <div className="bar-leader-tag">LEADER</div>}
-                </div>
-              </div>
-
               <div className="bcol bcol-num">
                 <span className="num-big">{t.total_hrs}</span>
               </div>
@@ -110,6 +100,16 @@ export default function StandingsTable({ initialStandings }: Props) {
                 {gap === 0
                   ? <span className="gap-leader">—</span>
                   : <span className="gap-num">-{gap}</span>}
+              </div>
+
+              <div className="bcol bcol-bar">
+                <div className="bar-track">
+                  <div
+                    className="bar-fill"
+                    style={{ width: `${pct * 100}%`, background: color, color }}
+                  />
+                  {isLeader && <div className="bar-leader-tag">LEADER</div>}
+                </div>
               </div>
             </div>
           );
