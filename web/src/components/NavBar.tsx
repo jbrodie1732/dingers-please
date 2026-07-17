@@ -6,7 +6,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 const NAV = [
-  { href: '/',         glyph: 'STD', label: 'Standings'    },
+  { href: '/',         glyph: 'HOM', label: 'Home'         },
+  { href: '/dataroom', glyph: 'DAT', label: 'Dataroom'     },
   { href: '/timeline', glyph: 'RAC', label: 'The Race'     },
   { href: '/h2h',      glyph: 'H2H', label: 'Head to Head' },
   { href: '/spray',    glyph: 'SPR', label: 'Spray Charts' },

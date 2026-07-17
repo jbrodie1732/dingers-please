@@ -1,13 +1,44 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { HomeRun, TeamStanding } from '@/lib/types';
-import { getTeamColor } from '@/lib/types';
+import type { HomeRun, TeamStanding, MickeyTone } from '@/lib/types';
+import { getTeamColor, mickeyTier } from '@/lib/types';
+
+const MICKEY_TONE_VAR: Record<MickeyTone, string> = {
+  clubhouse: 'var(--c-foul)',
+  mickey:    'var(--c-mickey)',
+  kinda:     'var(--c-accent)',
+  legit:     'var(--c-legit)',
+};
+
+function shortDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const [y, m, d] = String(iso).split('-');
+  if (!m) return String(iso);
+  return `${m}/${d}/${y.slice(2)}`;
+}
+
+// Statcast/Gameday hit coordinates use home plate ≈ (125.42, 198.27) with the
+// outfield in the -y direction, ~2.495 ft per unit — the exact convention the
+// watcher's Mickey Meter already relies on (src/watcher/mickeyMouse.js).
+//
+// The old mapping rescaled x and y by DIFFERENT factors (x by 480/210 ≈ 2.29,
+// y by 285/220 ≈ 1.30), which stretched the field horizontally ~1.76× and
+// distorted every ball's angle off home plate — a ball pulled ~45° down the
+// line got skewed to ~60° and rendered in foul territory (e.g. Trea Turner's
+// pull). The fix is a single home-plate-anchored affine transform with an
+// EQUAL x/y scale, so true spray angles are preserved and the drawn ±45° foul
+// lines line up with the data.
+const GC_HOME_X = 125.42;   // home plate, Gameday x
+const GC_HOME_Y = 198.27;   // home plate, Gameday y
+const SVG_HOME_X = 300;     // home plate in SVG space
+const SVG_HOME_Y = 430;
+const SVG_SCALE = 1.6;      // SVG px per Gameday coordinate unit
 
 function toFieldCoords(spray_x: number, spray_y: number) {
-  const cx = 60  + ((spray_x - 20) / 210) * 480;
-  const cy = 140 + ((spray_y - 10) / 220) * 285;
-  return { cx, cy };
+  const dx = (spray_x - GC_HOME_X) * SVG_SCALE;        // + = toward right field
+  const dy = (GC_HOME_Y - spray_y) * SVG_SCALE;        // + = toward the outfield
+  return { cx: SVG_HOME_X + dx, cy: SVG_HOME_Y - dy };
 }
 
 function BigField({
@@ -30,20 +61,21 @@ function BigField({
           <circle cx="3" cy="3" r="0.6" fill="var(--c-borderHi)" opacity="0.4" />
         </pattern>
       </defs>
-      {/* fair territory */}
-      <path d="M 300 440 L 60 140 Q 300 -20 540 140 Z"
+      {/* fair territory — foul lines at a true ±45° off home plate (300,430),
+          so the drawn fan matches the coordinate transform above */}
+      <path d="M 300 430 L 151 281 Q 300 55 449 281 Z"
             fill="url(#grass-big)" stroke="var(--c-borderHi)" strokeWidth="1" />
-      <path d="M 300 440 L 60 140 Q 300 -20 540 140 Z"
+      <path d="M 300 430 L 151 281 Q 300 55 449 281 Z"
             fill="url(#halftone-field)" opacity="0.25" />
       {/* foul lines */}
-      <line x1="300" y1="440" x2="60"  y2="140" stroke="var(--c-foul)" strokeOpacity="0.45" strokeWidth="1.2" />
-      <line x1="300" y1="440" x2="540" y2="140" stroke="var(--c-foul)" strokeOpacity="0.45" strokeWidth="1.2" />
+      <line x1="300" y1="430" x2="151" y2="281" stroke="var(--c-foul)" strokeOpacity="0.45" strokeWidth="1.2" />
+      <line x1="300" y1="430" x2="449" y2="281" stroke="var(--c-foul)" strokeOpacity="0.45" strokeWidth="1.2" />
       {/* warning track */}
-      <path d="M 80 150 Q 300 -10 520 150" fill="none" stroke="var(--c-borderHi)" strokeWidth="0.8" strokeDasharray="3 4" />
+      <path d="M 168 278 Q 300 82 432 278" fill="none" stroke="var(--c-borderHi)" strokeWidth="0.8" strokeDasharray="3 4" />
       {/* infield diamond */}
-      <polygon points="300,400 250,350 300,300 350,350" fill="none" stroke="var(--c-borderHi)" strokeWidth="1" />
-      <circle cx="300" cy="350" r="6" fill="var(--c-borderHi)" />
-      <circle cx="300" cy="425" r="3" fill="var(--c-bone)" />
+      <polygon points="300,430 341,389 300,348 259,389" fill="none" stroke="var(--c-borderHi)" strokeWidth="1" />
+      <circle cx="300" cy="391" r="6" fill="var(--c-borderHi)" />
+      <circle cx="300" cy="430" r="3" fill="var(--c-bone)" />
       {/* HR dots */}
       {hrs.map(hr => {
         if (hr.spray_x == null || hr.spray_y == null) return null;
@@ -55,7 +87,7 @@ function BigField({
         return (
           <g key={hr.id} onClick={() => onSelect(isSel ? null : hr)} style={{ cursor: 'pointer' }}>
             {isSel && (
-              <line x1="300" y1="425" x2={cx} y2={cy}
+              <line x1="300" y1="430" x2={cx} y2={cy}
                     stroke={color} strokeWidth="1.2" strokeDasharray="2 3" opacity="0.7" />
             )}
             <circle
@@ -84,8 +116,8 @@ function StatCell({ label, value }: { label: string; value: string }) {
 
 function MickeyDetail({ hr }: { hr: HomeRun }) {
   const count  = hr.mickey_meter_count ?? 0;
-  const label  = hr.mickey_meter_label ?? '';
-  const ok     = label === 'LEGIT';
+  const tier   = mickeyTier(hr.mickey_meter_count);
+  const toneColor = MICKEY_TONE_VAR[tier.tone];
   const angle  = (count / 30) * 180;
   const arcLen = (count / 30) * 226;
   const teamId = (hr.players as any)?.team_id ?? '';
@@ -97,7 +129,7 @@ function MickeyDetail({ hr }: { hr: HomeRun }) {
       <div className="md-name">{hr.players?.name ?? '—'}</div>
       <div className="md-team" style={{ color }}>{hr.players?.teams?.name ?? '—'}</div>
       <div className="mickey-dial">
-        <svg viewBox="0 0 200 165" width="100%">
+        <svg viewBox="0 0 200 190" width="100%">
           <defs>
             <linearGradient id="dial-grad" x1="0" x2="1">
               <stop offset="0%"   stopColor="var(--c-mickey)" />
@@ -112,11 +144,11 @@ function MickeyDetail({ hr }: { hr: HomeRun }) {
           <path d="M 28 110 A 72 72 0 0 1 172 110"
                 fill="none" stroke="url(#dial-grad)" strokeWidth="14" strokeLinecap="round"
                 strokeDasharray={`${arcLen} 999`} />
-          {/* needle */}
+          {/* needle — pivots at the arc center (100,110), clear above the readout */}
           <g transform={`translate(100 110) rotate(${-180 + angle})`}>
-            <line x1="0" y1="0" x2="64" y2="0" stroke="var(--c-bone)" strokeWidth="2.5" strokeLinecap="round" />
-            <circle r="6" fill="var(--c-bone)" />
-            <circle r="3" fill="var(--c-bg)" />
+            <line x1="0" y1="0" x2="60" y2="0" stroke="var(--c-bone)" strokeWidth="2.5" strokeLinecap="round" />
+            <circle r="5.5" fill="var(--c-bone)" />
+            <circle r="2.5" fill="var(--c-bg)" />
           </g>
           {/* tick labels */}
           {[0, 10, 20, 30].map(t => {
@@ -128,14 +160,14 @@ function MickeyDetail({ hr }: { hr: HomeRun }) {
                     fill="var(--c-textDim)" fontFamily="var(--font-mono)">{t}</text>
             );
           })}
-          {/* readout */}
-          <text x="100" y="134" textAnchor="middle" fontSize="40" fontWeight="900"
+          {/* readout — dropped below the needle pivot so they no longer collide */}
+          <text x="100" y="152" textAnchor="middle" fontSize="32" fontWeight="900"
                 fill="var(--c-bone)" fontFamily="var(--font-digital)">{count}</text>
-          <text x="100" y="147" textAnchor="middle" fontSize="8" letterSpacing="1"
+          <text x="100" y="165" textAnchor="middle" fontSize="8" letterSpacing="1"
                 fill="var(--c-textDim)" fontFamily="var(--font-mono)">/ 30 PARKS</text>
-          <text x="100" y="161" textAnchor="middle" fontSize="9" fontWeight="700" letterSpacing="1.5"
-                fill={ok ? 'var(--c-legit)' : 'var(--c-mickey)'} fontFamily="var(--font-mono)">
-            {ok ? 'LEGIT' : 'MICKEY MOUSE'}
+          <text x="100" y="182" textAnchor="middle" fontSize="9" fontWeight="700" letterSpacing="0.5"
+                fill={toneColor} fontFamily="var(--font-mono)">
+            {tier.label}
           </text>
         </svg>
       </div>
@@ -143,7 +175,7 @@ function MickeyDetail({ hr }: { hr: HomeRun }) {
         <StatCell label="DIST" value={hr.distance     != null ? `${hr.distance} ft`     : '—'} />
         <StatCell label="EV"   value={hr.launch_speed  != null ? `${hr.launch_speed} mph` : '—'} />
         <StatCell label="LA"   value={hr.launch_angle  != null ? `${hr.launch_angle}°`   : '—'} />
-        <StatCell label="DATE" value={hr.game_date ?? '—'} />
+        <StatCell label="DATE" value={shortDate(hr.game_date)} />
       </div>
     </div>
   );
@@ -220,8 +252,10 @@ export default function SprayChart({ homeRuns, standings }: Props) {
                 using distance, exit velocity, and launch angle.
               </p>
               <div className="legend-pair">
-                <div className="legend-row"><span className="dot is-legit" /><b>LEGIT</b> · 18+ parks</div>
-                <div className="legend-row"><span className="dot is-mouse" /><b>MICKEY MOUSE</b> · &lt; 18 parks</div>
+                <div className="legend-row"><span className="dot" style={{ background: 'var(--c-legit)' }} /><b>okay kinda legit</b> · 24–30 parks</div>
+                <div className="legend-row"><span className="dot" style={{ background: 'var(--c-accent)' }} /><b>kinda mickey mouse</b> · 20–23 parks</div>
+                <div className="legend-row"><span className="dot" style={{ background: 'var(--c-mickey)' }} /><b>mickey mouse</b> · 10–19 parks</div>
+                <div className="legend-row"><span className="dot" style={{ background: 'var(--c-foul)' }} /><b>the whole fuckin clubhouse</b> · &lt; 10 parks</div>
               </div>
             </div>
           )}

@@ -3,7 +3,15 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { HomeRun } from '@/lib/types';
-import { getTeamColor } from '@/lib/types';
+import { getTeamColor, mickeyTier } from '@/lib/types';
+
+// Short tag word per Mickey tier, for the compact feed chip.
+const MICKEY_SHORT: Record<string, string> = {
+  legit: 'LEGIT',
+  kinda: 'KINDA',
+  mickey: 'MICKEY',
+  clubhouse: 'CLUBHOUSE',
+};
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -21,9 +29,9 @@ function FeedRow({ hr, fresh }: { hr: HomeRun; fresh?: boolean }) {
   const teamId   = (player as any)?.team_id as string | undefined;
   const color    = teamId ? getTeamColor(teamId, player?.teams?.draft_position) : 'var(--c-textDim)';
 
-  const label = hr.mickey_meter_label;
   const count = hr.mickey_meter_count;
-  const isLegit = label?.toUpperCase().includes('LEGIT');
+  const tier = mickeyTier(count);
+  const isLegit = tier.tone === 'legit';
 
   return (
     <div
@@ -51,9 +59,9 @@ function FeedRow({ hr, fresh }: { hr: HomeRun; fresh?: boolean }) {
               <span className="feed-ev">{hr.launch_speed} mph</span>
             </>
           )}
-          {label && count != null && (
+          {count != null && (
             <span className={`feed-mickey ${isLegit ? 'is-legit' : 'is-mouse'}`}>
-              {isLegit ? 'LEGIT' : 'MICKEY'} {count}/30
+              {MICKEY_SHORT[tier.tone]} {count}/30
             </span>
           )}
         </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { getTeamColor } from '@/lib/types';
+import { getTeamColor, mickeyTier } from '@/lib/types';
 
 type HRToast = {
   id: string;
@@ -34,8 +34,8 @@ function TickUp({ to, suffix = '', decimals = 0 }: { to: number; suffix?: string
   return <span>{v.toFixed(decimals)}{suffix}</span>;
 }
 
-function MickeyTag({ mm, label }: { mm: number; label: string }) {
-  const ok = label === 'LEGIT';
+function MickeyTag({ mm }: { mm: number }) {
+  const ok = mickeyTier(mm).tone === 'legit';
   return (
     <span className={`mickey-tag ${ok ? 'is-legit' : 'is-mouse'}`}>
       <span className="mickey-num">{mm}</span>
@@ -77,8 +77,8 @@ function CelebrationToast({ hr, onClose }: { hr: HRToast; onClose: () => void })
           <div className="stat">
             <div className="stat-label">METER</div>
             <div className="stat-value">
-              {hr.mickeyMeter != null && hr.mickeyLabel
-                ? <MickeyTag mm={hr.mickeyMeter} label={hr.mickeyLabel} />
+              {hr.mickeyMeter != null
+                ? <MickeyTag mm={hr.mickeyMeter} />
                 : '—'}
             </div>
           </div>

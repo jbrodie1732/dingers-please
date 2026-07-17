@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import type { TeamStanding, HomeRun } from '@/lib/types';
 import StandingsTable from '@/components/StandingsTable';
 import RealtimeFeed from '@/components/RealtimeFeed';
+import GameTicker from '@/components/GameTicker';
 
 export const revalidate = 0;
 
@@ -40,7 +41,7 @@ export default async function HomePage() {
     <div className="screen">
       <div className="hero-header">
         <div className="hero-eyebrow">SEASON 2026</div>
-        <h1 className="hero-title">Standings</h1>
+        <h1 className="hero-title">Dingers, Please. TYSM</h1>
         <div className="hero-meta">
           <span><b>{totalHRs}</b> dingers logged</span>
           <span className="dot-sep">·</span>
@@ -49,6 +50,8 @@ export default async function HomePage() {
           <span>Updated <b>live</b></span>
         </div>
       </div>
+
+      <GameTicker />
 
       <div className="standings-grid">
         <StandingsTable initialStandings={standings} />

@@ -12,8 +12,13 @@ const CARRY_PCT    = 0.30; // % of team HRs to be a "LeBron carrier"
 // ---- Helpers ----
 
 function formatDate(isoOrDate) {
-  const d = new Date(isoOrDate);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  // game_date is a date-only string (YYYY-MM-DD). `new Date('2026-07-16')`
+  // parses as UTC midnight, which toLocaleDateString then renders a day
+  // earlier in any timezone west of UTC (e.g. "Jul 15" in ET) — anchor at noon
+  // UTC so the calendar day is preserved.
+  const s = String(isoOrDate);
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(`${s}T12:00:00Z`) : new Date(s);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
 function formatDateShort(iso) {
@@ -28,9 +33,13 @@ function getMlbDate() {
   return shifted.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 }
 
-function daysAgo(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
+// Shift a YYYY-MM-DD string by whole days (anchored at noon UTC so DST/tz
+// never bumps it across a day boundary). Used to derive the recap day and the
+// "past N days" window from the MLB date, so everything stays consistent with
+// getMlbDate() rather than the host machine's local clock.
+function shiftDate(isoDate, deltaDays) {
+  const d = new Date(`${isoDate}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + deltaDays);
   return d.toISOString().split('T')[0];
 }
 
@@ -83,11 +92,13 @@ function formatRankMovement(prev, curr) {
 }
 
 async function main() {
-  const today     = getMlbDate();
-  const yesterday = daysAgo(1);
-  const nDaysAgo  = daysAgo(NUM_DAYS);
+  // The recap runs in the morning and covers the PRIOR day's games (which
+  // finished overnight). So "today" has no HRs yet — recap the day before.
+  const mlbToday  = getMlbDate();
+  const recapDate = shiftDate(mlbToday, -1);              // day being recapped
+  const nDaysAgo  = shiftDate(recapDate, -(NUM_DAYS - 1)); // start of the N-day hot-streak window (ends on recapDate)
 
-  console.log(`Building daily summary for ${today}...`);
+  console.log(`Building daily recap for ${recapDate} (sent ${mlbToday})...`);
 
   const [allHRs, standings, playerStandings] = await Promise.all([
     getAllHomeRuns(),
@@ -100,21 +111,24 @@ async function main() {
     process.exit(0);
   }
 
-  // ---- Today's HRs ----
-  const todayHRs = allHRs.filter(hr => hr.game_date === today);
+  // ---- Recapped day's HRs ----
+  const recapHRs = allHRs.filter(hr => hr.game_date === recapDate);
 
-  // ---- Yesterday's team totals (for rank movement) ----
-  const hrsUpToYesterday = allHRs.filter(hr => hr.game_date < today);
-  const prevTeamTotals   = {};
-  for (const hr of hrsUpToYesterday) {
+  // ---- Team totals BEFORE the recapped day (for rank movement) ----
+  // Rising/falling should reflect the movement caused by the recapped day's
+  // games, so "prev" is everything strictly before recapDate and "curr" is the
+  // current (all-time) standings — there are no games after recapDate yet.
+  const hrsBeforeRecap = allHRs.filter(hr => hr.game_date < recapDate);
+  const prevTeamTotals = {};
+  for (const hr of hrsBeforeRecap) {
     const tName = hr.players?.teams?.name;
     if (tName) prevTeamTotals[tName] = (prevTeamTotals[tName] || 0) + 1;
   }
   const prevStandings = Object.entries(prevTeamTotals).map(([team_name, total_hrs]) => ({ team_name, total_hrs }));
 
-  // ---- Longest HR today ----
-  const validToday  = todayHRs.filter(hr => hr.distance != null);
-  const longestToday = validToday.length ? validToday.reduce((m, h) => h.distance > m.distance ? h : m) : null;
+  // ---- Longest HR on the recapped day ----
+  const validRecap   = recapHRs.filter(hr => hr.distance != null);
+  const longestRecap = validRecap.length ? validRecap.reduce((m, h) => h.distance > m.distance ? h : m) : null;
 
   // ---- Longest HR season ----
   const validAll    = allHRs.filter(hr => hr.distance != null);
@@ -133,7 +147,7 @@ async function main() {
 
   // ---- Top avg distance players (min 2 HRs with distance) ----
   const topAvg = playerStandings
-    .filter(p => p.distances && p.distances.length >= 2)
+    .filter(p => p.distances && p.distances.length >= 1)
     .map(p => ({
       name: p.player_name,
       avg:  Math.round(p.distances.reduce((s, d) => s + d, 0) / p.distances.length),
@@ -159,13 +173,13 @@ async function main() {
   const { risingTxt, fallingTxt } = formatRankMovement(prevStandings, standings);
 
   // ---- Assemble message ----
-  const dayLongest    = longestToday ? `${longestToday.players?.name} – ${longestToday.distance} ft.` : 'N/A';
+  const dayLongest    = longestRecap ? `${longestRecap.players?.name} – ${longestRecap.distance} ft.` : 'N/A';
   const seasonLongest = longestAll   ? `${longestAll.players?.name} – ${longestAll.distance} ft. (${formatDate(longestAll.game_date)})` : 'N/A';
   const hotTxt        = hotPlayers.length ? hotPlayers.map(([n, c]) => `- ${n}: ${c} HRs`).join('\n') : 'None';
   const avgTxt        = topAvg.length ? topAvg.map(p => `- ${p.name}: ${p.avg} ft.`).join('\n') : 'N/A';
   const heavyTxt      = heavyLifters.length ? heavyLifters.map(h => `- ${h.name} (${h.team}): ${h.pct}%`).join('\n') : 'None';
 
-  const message = `🗓️ Recap for ${formatDateShort(today)}
+  const message = `🗓️ Recap for ${formatDateShort(recapDate)}
 
 🏆 Dinger Standings 🏆
 
@@ -181,7 +195,7 @@ ${fallingTxt}
 
 ======== #ANALytics ========
 
-📏 Longest Gat – Today
+📏 Longest Gat – Yesterday
 
 ${dayLongest}
 

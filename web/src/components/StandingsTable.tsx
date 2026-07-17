@@ -61,7 +61,7 @@ export default function StandingsTable({ initialStandings }: Props) {
           <div className="bcol bcol-team">TEAM</div>
           <div className="bcol bcol-bar">PACE</div>
           <div className="bcol bcol-num">HR</div>
-          <div className="bcol bcol-gap">GB</div>
+          <div className="bcol bcol-gap">DB</div>
         </div>
 
         {sorted.map((t, i) => {

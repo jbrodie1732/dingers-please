@@ -77,6 +77,20 @@ export type DraftPick = {
   teams?:       Team;
 };
 
+// Mickey Meter tier, keyed off how many of the 30 parks the ball clears.
+// Derived from the count (not the stored label) so historical rows re-tier
+// automatically and the site always matches the current scheme. Keep these
+// boundaries in sync with src/watcher/alerts.js getDongLabel().
+export type MickeyTone = 'clubhouse' | 'mickey' | 'kinda' | 'legit';
+
+export function mickeyTier(count: number | null | undefined): { label: string; tone: MickeyTone } {
+  if (count == null) return { label: '—', tone: 'mickey' };
+  if (count < 10)  return { label: 'the whole fuckin clubhouse', tone: 'clubhouse' };
+  if (count <= 19) return { label: 'mickey mouse', tone: 'mickey' };
+  if (count <= 23) return { label: 'kinda mickey mouse', tone: 'kinda' };
+  return { label: 'okay kinda legit', tone: 'legit' };
+}
+
 // 11 team colors (one per current team). Naive evenly-spaced hues turned out
 // not to be good enough — human color perception isn't uniform around the
 // hue wheel, and the green/cyan and blue/violet ranges compress a lot more

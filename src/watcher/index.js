@@ -22,6 +22,18 @@ let playerCache    = new Map();   // player name → player row  (primary: draft
 let playerIdCache  = new Map();   // mlb_player_id → player row (reliable; used first)
 let stadiaByPark;                 // loaded once at startup
 
+// gamePks considered "active" as of the last completed poll. Lets us give a
+// game exactly one more full-feed pass after it drops off the active list
+// (finished, postponed, etc.) before we stop looking at it. Without this, a
+// game that flips from Live -> Final while this process is asleep/paused
+// (system sleep suspends the event loop, so a 60s poll can silently become a
+// multi-hour gap) would never be revisited once we wake up, since the main
+// loop only ever processes CURRENTLY active games — any HRs from the tail
+// end of that specific game would be permanently missed rather than just
+// delayed. This makes that recoverable: the very next poll after waking
+// re-fetches that game's full play-by-play (not incremental) one last time.
+let recentlyActiveGamePks = new Set();
+
 // ---- Rank calculator ----
 function getTeamRank(standings, teamName) {
   const sorted = [...standings].sort((a, b) => b.total_hrs - a.total_hrs);
@@ -81,24 +93,37 @@ async function pollGames() {
   const date = getMlbDate();
 
   try {
-    const allGames    = await fetchSchedule(date);
-    const activeGames = allGames.filter(isActiveGame);
+    const allGames      = await fetchSchedule(date);
+    const activeGames   = allGames.filter(isActiveGame);
+    const activeGamePks = new Set(activeGames.map(g => g.gamePk));
 
-    console.log(`🔄 [${new Date().toLocaleTimeString()}] ${activeGames.length} active game(s) — ${date}`);
+    // One grace pass for anything that was active last poll but isn't now —
+    // covers both the normal "finished between two 60s polls" case and the
+    // "we were asleep for the whole rest of the game" case identically.
+    const catchUpGames = allGames.filter(
+      g => recentlyActiveGamePks.has(g.gamePk) && !activeGamePks.has(g.gamePk)
+    );
+    recentlyActiveGamePks = activeGamePks;
+
+    const gamesToProcess = [...activeGames, ...catchUpGames];
+
+    console.log(`🔄 [${new Date().toLocaleTimeString()}] ${activeGames.length} active game(s)${catchUpGames.length ? `, ${catchUpGames.length} catch-up sweep` : ''} — ${date}`);
 
     if (activeGames.length === 0) {
       emptyPollCount++;
-      if (emptyPollCount >= EMPTY_POLL_THRESHOLD) {
+      if (emptyPollCount >= EMPTY_POLL_THRESHOLD && gamesToProcess.length === 0) {
         console.log('🏁 No active games for a while. Watcher shutting down until tomorrow.');
         process.exit(0);
       }
-      return;
+      if (gamesToProcess.length === 0) return;
+      // fall through — there's a catch-up sweep to run even though nothing's active right now
+    } else {
+      emptyPollCount = 0;
     }
-    emptyPollCount = 0;
 
     const processedThisPoll = new Set();
 
-    for (const game of activeGames) {
+    for (const game of gamesToProcess) {
       try {
         const plays = await fetchLiveFeed(game.gamePk);
 

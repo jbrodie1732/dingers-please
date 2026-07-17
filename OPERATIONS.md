@@ -132,7 +132,14 @@ node src/scripts/send-summary.js # fire the morning summary right now
 
 ### Running unattended (no manual `npm run pm2:start` every day)
 
-Because alerts go out over iMessage, this has to run on your actual Mac — there's no cloud-hosted equivalent for AppleScript/Messages.app. But you can get most of the way to "set it and forget it" with two one-time setup steps:
+Because alerts go out over iMessage, this has to run on your actual Mac — there's no cloud-hosted equivalent for AppleScript/Messages.app. But you can get most of the way to "set it and forget it" with these one-time setup steps:
+
+**0. Disable system sleep entirely (do this first — it's the actual fix, not just a workaround).** A locked screen is completely fine — background processes (including PM2/Node) keep running normally while locked. But real *system sleep* suspends the whole process, including the watcher's 60s poll timer and any in-flight network request. Since this runs on an iMac that's always on wall power (not battery), there's no downside to just turning sleep off entirely:
+```bash
+sudo pmset -c sleep 0       # never sleep on AC power
+sudo pmset -c disksleep 0   # don't spin down the disk either
+```
+The display can still turn off on its own schedule (`pmset -c displaysleep <minutes>`) — that doesn't affect background processes at all, only actual system sleep does. Confirm with `pmset -g`.
 
 **1. Auto-relaunch PM2 on login/reboot**, so if the Mac restarts (macOS update, crash, power blip) it comes back on its own:
 ```bash
@@ -144,18 +151,18 @@ pm2 save
 ```
 Re-run `pm2 save` any time you add/remove a PM2 process.
 
-**2. Schedule the Mac to wake up before the 11am ET restart**, since PM2's cron can't fire while the machine is asleep:
+**2. Schedule the Mac to wake up before the 11am ET restart**, as a redundant safety net in case sleep ever gets re-enabled (by a macOS update, etc.) despite step 0 — PM2's cron can't fire while the machine is asleep:
 ```bash
 sudo pmset repeat wakeorpoweron MTWRFSA 10:55:00
 ```
 Check it's set with `pmset -g sched`.
 
 **Limits of this setup (why it's "hardened," not bulletproof):**
-- This only works if the Mac is *sleeping*, not fully shut down or unplugged — most MacBooks won't power on from a true shutdown via `pmset`, only wake from sleep. Keep it plugged in and just let the lid close / display sleep rather than shutting down.
-- If it loses power entirely (outage, dead battery, unplugged, physically off for repair) nothing will bring it back until you power it on and log in yourself — at which point `pm2 resurrect` kicks in automatically from step 1.
+- Step 0 only controls *this* Mac's own sleep behavior — if it loses power entirely (outage, dead battery, unplugged, physically off for repair) nothing will bring it back until you power it on and log in yourself — at which point `pm2 resurrect` kicks in automatically from step 1.
 - Don't fully log out — a locked screen is fine, but a logged-out session won't run the LaunchAgent PM2 registered.
+- **Even if the Mac does sleep** (missed step 0, or a game runs during a brief unavoidable nap), the watcher (`src/watcher/index.js`) gives every game one grace "catch-up" poll right after it drops off the active-games list — this specifically covers a game finishing *while the process was suspended*, which otherwise would've been silently skipped forever (the main loop only ever looks at currently-active games, so a game that flips Live→Final during downtime would never be revisited without this). It re-fetches that game's full play-by-play (not incremental) one last time, so anything from the tail end of the game still gets caught, just later than normal. This isn't a substitute for step 0 — it only recovers missed *home runs*, not the real-time promptness of the alert — but it means a sleep gap can no longer cause silent, permanent data loss.
 
-If you want true zero-Mac-dependency reliability (survives your laptop being closed, dead, or at the shop), the real fix is moving off iMessage to a cloud-native alert channel (Twilio SMS, Slack/Discord webhook, email) so the whole watcher can run on a $0–5/mo cloud box instead of your laptop — a bigger change, but worth it if these Mac-dependency edge cases start actually biting you.
+If you want true zero-Mac-dependency reliability (survives your Mac being off, dead, or at the shop), the real fix is moving off iMessage to a cloud-native alert channel (Twilio SMS, Slack/Discord webhook, email) so the whole watcher can run on a $0–5/mo cloud box instead of your Mac — a bigger change, but worth it if these Mac-dependency edge cases start actually biting you.
 
 ---
 

@@ -5,12 +5,13 @@ const APPLESCRIPT      = path.join(__dirname, '../../applescripts/sendMessage.ap
 const SUMMARY_SCRIPT   = path.join(__dirname, '../../applescripts/sendMessage_summary.applescript');
 const CHAT_NAME        = process.env.IMESSAGE_GROUP_CHAT || 'Dingers only';
 
+// Mickey Meter tiers, keyed off how many of the 30 parks the ball clears.
+// Keep these boundaries in sync with web/src/lib/types.ts mickeyTier().
 function getDongLabel(count) {
-  if (count <= 5)  return '100% Mickey Mouse Bullshit. the whole mf clubhouse';
-  if (count <= 12) return '75% pretty mickey mouse ngl';
-  if (count <= 19) return '50% Goofy';
-  if (count <= 27) return '25% donald duck';
-  return 'okay kinda legit';
+  if (count < 10)  return 'the whole fuckin clubhouse'; // <10
+  if (count <= 19) return 'mickey mouse';               // 10–19
+  if (count <= 23) return 'kinda mickey mouse';         // 20–23
+  return 'okay kinda legit';                            // >=24
 }
 
 function buildAlertMessage({ playerName, playerTotal, distance, fantasyTeam, teamTotal, rank, mickeyCount, mickeyLabel }) {
