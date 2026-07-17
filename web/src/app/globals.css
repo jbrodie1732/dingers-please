@@ -327,10 +327,13 @@ body::before {
 @media (max-width: 1100px) { .standings-grid { grid-template-columns: 1fr; } }
 
 .board-scroll { overflow-x: auto; }
-.board-table { padding: 4px 0; min-width: 560px; }
+.board-table { padding: 4px 0; min-width: 448px; }
 .board-row {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1.4fr) 80px 60px minmax(0, 2fr);
+  /* Fixed team/HR/DB widths so extra width flows into the VS-LEADER bar (not a
+     giant trailing gap after the team name), and every row stays aligned —
+     content-based widths would differ row-to-row since each row is its own grid. */
+  grid-template-columns: 40px 124px 64px 64px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   padding: 10px 18px;
@@ -378,7 +381,7 @@ body::before {
   color: var(--c-text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.bcol-bar { position: relative; }
+.bcol-bar { position: relative; padding-left: 10px; }
 .bar-track {
   width: 100%; height: 14px;
   background: var(--c-surfaceHi);
