@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, DM_Mono, Inter } from 'next/font/google';
 import './globals.css';
 import NavBar from '@/components/NavBar';
 import LiveAlerts from '@/components/LiveAlerts';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="main-pane">
           {children}
         </main>
+        <SpeedInsights />
       </body>
     </html>
   );
