@@ -1,9 +1,17 @@
 const { execFile } = require('child_process');
+const { promisify } = require('util');
 const path = require('path');
+
+const execFileAsync = promisify(execFile);
 
 const APPLESCRIPT      = path.join(__dirname, '../../applescripts/sendMessage.applescript');
 const SUMMARY_SCRIPT   = path.join(__dirname, '../../applescripts/sendMessage_summary.applescript');
 const CHAT_NAME        = process.env.IMESSAGE_GROUP_CHAT || 'Dingers only';
+
+const SEND_ATTEMPTS = 3;      // retry a flaky Messages send this many times
+const SEND_RETRY_MS = 1500;   // wait between attempts
+
+function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 // Mickey Meter tiers, keyed off how many of the 30 parks the ball clears.
 // Keep these boundaries in sync with web/src/lib/types.ts mickeyTier().
@@ -41,15 +49,35 @@ function buildAlertMessage({ playerName, playerTotal, distance, fantasyTeam, tea
   return lines.join('\n');
 }
 
-function sendAlert(alertData) {
+// One delivery attempt loop for a single alert. Resolves true on success,
+// false if every retry failed (never throws — the caller decides what to do).
+async function deliverAlert(alertData) {
   const message = buildAlertMessage(alertData);
-  execFile('osascript', [APPLESCRIPT, message, CHAT_NAME], (error, _stdout, stderr) => {
-    if (error) {
-      console.error('❌ iMessage alert error:', stderr || error.message);
-    } else {
+  for (let attempt = 1; attempt <= SEND_ATTEMPTS; attempt++) {
+    try {
+      await execFileAsync('osascript', [APPLESCRIPT, message, CHAT_NAME]);
       console.log(`✅ Alert sent — ${alertData.playerName}`);
+      return true;
+    } catch (err) {
+      const detail = (err.stderr || err.message || '').toString().trim();
+      console.error(`❌ iMessage alert error (attempt ${attempt}/${SEND_ATTEMPTS}) — ${alertData.playerName}: ${detail}`);
+      if (attempt < SEND_ATTEMPTS) await sleep(SEND_RETRY_MS);
     }
-  });
+  }
+  return false;
+}
+
+// Serialize all sends through a single chain so two osascript processes never
+// drive Messages at the same time (concurrent sends were silently dropping
+// texts). Returns a promise that resolves true if the alert was delivered.
+let sendChain = Promise.resolve();
+
+function sendAlert(alertData) {
+  const result = sendChain.then(() => deliverAlert(alertData));
+  // Keep the queue alive whether this send resolved true/false (deliverAlert
+  // never rejects, but guard anyway).
+  sendChain = result.then(() => {}, () => {});
+  return result;
 }
 
 function sendSummary(message) {

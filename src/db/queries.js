@@ -49,6 +49,32 @@ async function getPlayerStandings() {
   return data || [];
 }
 
+// Home runs whose iMessage alert hasn't been confirmed sent yet, limited to a
+// recent window so a watcher that was down for a long time doesn't blast stale
+// alerts when it comes back. Joined with player+team for building the message.
+async function getUnsentAlertHomeRuns(sinceIso) {
+  const { data, error } = await supabase
+    .from('home_runs')
+    .select('id, game_pk, at_bat_index, player_id, distance, mickey_meter_count, mickey_meter_label, hit_at, players(name, teams(name))')
+    .eq('alert_sent', false)
+    .gte('hit_at', sinceIso)
+    .order('hit_at', { ascending: true });
+  if (error) {
+    console.error('getUnsentAlertHomeRuns error:', error.message);
+    return [];
+  }
+  return data || [];
+}
+
+// Flip a home run's alert flag once its text has actually gone out.
+async function markAlertSent(id) {
+  const { error } = await supabase
+    .from('home_runs')
+    .update({ alert_sent: true })
+    .eq('id', id);
+  if (error) console.error('markAlertSent error:', error.message);
+}
+
 // Total HRs for one player (for alert message).
 async function getPlayerHrCount(playerId) {
   const { count, error } = await supabase
@@ -154,6 +180,8 @@ module.exports = {
   getTeamStandings,
   getPlayerStandings,
   getPlayerHrCount,
+  getUnsentAlertHomeRuns,
+  markAlertSent,
   getHomeRunsSince,
   getAllHomeRuns,
   getAllPlayers,

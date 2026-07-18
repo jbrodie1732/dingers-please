@@ -8,7 +8,10 @@ module.exports = {
       cron_restart: '0 11 * * *',   // restart at 11am ET every day
       time_zone: 'America/New_York', // pin the cron to ET regardless of the host machine's local clock
       watch: false,
-      autorestart: true,            // restart if it crashes mid-game
+      autorestart: true,            // restart if it crashes mid-game (non-zero exit)
+      stop_exit_codes: [0],         // but NOT on the intentional "no games for a while" exit(0) —
+                                    // otherwise PM2 relaunches it all day and it restart-loops.
+                                    // The 11am cron_restart is what brings it back each morning.
       max_restarts: 10,
       restart_delay: 5000,
       env: {
