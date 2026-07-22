@@ -54,6 +54,12 @@ export type PlayerStanding = {
   distances:   number[] | null;
   avg_distance: number | null;
   longest_hr:   number | null;
+  // Exposed by the player_standings view (migration 002). A dropped player
+  // keeps his team + his pre-drop HRs (which is_dropped/dropped_at window),
+  // so the Rosters page can show him separately from the active squad.
+  is_dropped?:  boolean;
+  added_at?:    string | null;
+  dropped_at?:  string | null;
 };
 
 export type DailyTeamHr = {

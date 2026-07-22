@@ -837,6 +837,15 @@ body::before {
 .rcard-bar-fill   { height: 100%; border-radius: 2px; transition: width 0.6s cubic-bezier(.2,.8,.2,1); }
 .rcard-pct        { font-family: var(--font-mono); font-size: 9px; color: var(--c-textDim); }
 
+/* ─── Dropped players (HRs still count, no longer on the active roster) ───────── */
+.roster-dropped        { border-top: 1px solid var(--c-border); opacity: 0.62; }
+.roster-dropped-head   { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-textDim); padding: 12px 18px 8px; }
+.roster-dropped-list   { display: flex; flex-direction: column; }
+.roster-dropped-row    { display: flex; align-items: baseline; gap: 12px; padding: 8px 18px; border-top: 1px solid var(--c-border); }
+.roster-dropped-pos    { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.18em; color: var(--c-textDim); min-width: 28px; }
+.roster-dropped-name   { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--c-textMuted); text-decoration: line-through; text-decoration-thickness: 1px; }
+.roster-dropped-hrs    { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--c-textMuted); }
+
 /* ─── Roster radar ───────────────────────────────────────────────────────────── */
 .radar-card {
   margin-top: 18px;

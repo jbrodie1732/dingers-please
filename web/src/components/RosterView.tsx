@@ -21,17 +21,23 @@ export default function RosterView({ players, standings, mlbIdByUuid }: Props) {
   const color = team ? getTeamColor(team.team_id, team.draft_position) : 'var(--c-accent)';
   const total = team?.total_hrs ?? 0;
 
+  // Radar = current squad only; a dropped player shouldn't skew the profile.
   const radarModel = useMemo(
     () => buildRadarModel(
-      players.map(p => ({ player_id: p.player_id, team_name: p.team_name })),
+      players
+        .filter(p => !p.is_dropped)
+        .map(p => ({ player_id: p.player_id, team_name: p.team_name })),
       mlbIdByUuid
     ),
     [players, mlbIdByUuid]
   );
 
-  const teamPlayers = players
-    .filter(p => p.team_name === team?.team_name)
-    .sort((a, b) => POSITION_ORDER.indexOf(a.position) - POSITION_ORDER.indexOf(b.position));
+  const byPosition = (a: PlayerStanding, b: PlayerStanding) =>
+    POSITION_ORDER.indexOf(a.position) - POSITION_ORDER.indexOf(b.position);
+
+  const teamPlayers    = players.filter(p => p.team_name === team?.team_name);
+  const activePlayers  = teamPlayers.filter(p => !p.is_dropped).sort(byPosition);
+  const droppedPlayers = teamPlayers.filter(p =>  p.is_dropped).sort(byPosition);
 
   return (
     <>
@@ -80,11 +86,11 @@ export default function RosterView({ players, standings, mlbIdByUuid }: Props) {
           </div>
 
           <div className="roster-grid">
-            {teamPlayers.length === 0 ? (
+            {activePlayers.length === 0 ? (
               <div style={{ gridColumn: '1/-1', padding: '40px', textAlign: 'center', color: 'var(--c-textDim)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.1em' }}>
                 NO PLAYERS ON THIS ROSTER YET
               </div>
-            ) : teamPlayers.map(p => {
+            ) : activePlayers.map(p => {
               const pct = total > 0 ? Math.round((p.total_hrs / total) * 100) : 0;
               return (
                 <div key={p.player_id} className="rcard">
@@ -103,6 +109,23 @@ export default function RosterView({ players, standings, mlbIdByUuid }: Props) {
               );
             })}
           </div>
+
+          {droppedPlayers.length > 0 && (
+            <div className="roster-dropped">
+              <div className="roster-dropped-head">
+                DROPPED · HRs before the drop still count for {team.team_name}
+              </div>
+              <div className="roster-dropped-list">
+                {droppedPlayers.map(p => (
+                  <div key={p.player_id} className="roster-dropped-row">
+                    <span className="roster-dropped-pos">{p.position}</span>
+                    <span className="roster-dropped-name">{p.player_name}</span>
+                    <span className="roster-dropped-hrs">{p.total_hrs} HR</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>
