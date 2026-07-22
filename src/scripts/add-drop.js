@@ -108,6 +108,21 @@ async function main() {
   }]);
   if (!confirm) { console.log('Cancelled.'); process.exit(0); }
 
+  // Resolve the add target BEFORE dropping. The added player almost always
+  // already exists in the pool (team_id null) — players.name is UNIQUE, so we
+  // REUSE that row instead of inserting a duplicate. Resolving first means a
+  // failed add can't leave the roster with a dropped player and no replacement.
+  const { data: existingRows } = await supabase
+    .from('players')
+    .select('id, name, team_id, dropped_at')
+    .ilike('name', addName.trim())
+    .limit(1);
+  const existingAdd = existingRows?.[0];
+  if (existingAdd && existingAdd.team_id !== null && existingAdd.dropped_at === null) {
+    console.error(chalk.red(`Add error: ${existingAdd.name} is already on a roster.`));
+    process.exit(1);
+  }
+
   // 1. Mark dropped player
   const { error: dropErr } = await supabase
     .from('players')
@@ -115,18 +130,29 @@ async function main() {
     .eq('id', droppedPlayer.id);
   if (dropErr) { console.error(chalk.red('Drop error:', dropErr.message)); process.exit(1); }
 
-  // 2. Insert added player (same position as dropped player)
-  const { data: addedPlayer, error: addErr } = await supabase
-    .from('players')
-    .insert({
-      name:     addName.trim(),
-      team_id:  team.id,
-      position: droppedPlayer.position,
-      added_at: effectiveNow,
-    })
-    .select()
-    .single();
-  if (addErr) { console.error(chalk.red('Add error:', addErr.message)); process.exit(1); }
+  // 2. Add the replacement — reuse the existing pool row (keeps its MLB ID so
+  //    the watcher still matches it), or insert a new row if the name is new.
+  let addedPlayer, addErr;
+  if (existingAdd) {
+    ({ data: addedPlayer, error: addErr } = await supabase
+      .from('players')
+      .update({ team_id: team.id, position: droppedPlayer.position, added_at: effectiveNow, dropped_at: null })
+      .eq('id', existingAdd.id)
+      .select()
+      .single());
+  } else {
+    ({ data: addedPlayer, error: addErr } = await supabase
+      .from('players')
+      .insert({ name: addName.trim(), team_id: team.id, position: droppedPlayer.position, added_at: effectiveNow })
+      .select()
+      .single());
+  }
+  if (addErr) {
+    // Roll the drop back so we don't leave an orphaned open slot.
+    await supabase.from('players').update({ dropped_at: null }).eq('id', droppedPlayer.id);
+    console.error(chalk.red('Add error:', addErr.message), chalk.gray('(drop rolled back)'));
+    process.exit(1);
+  }
 
   // 3. Record the transaction
   const { error: txErr } = await supabase
@@ -142,7 +168,11 @@ async function main() {
   if (txErr) { console.error(chalk.red('Transaction record error:', txErr.message)); process.exit(1); }
 
   console.log(chalk.bold.green(`\n✅ Transaction complete!`));
-  console.log(chalk.gray(`  ${dropName} dropped — run 'npm run fetch-mlb-ids -- --save' to match ${addName.trim()}'s MLB ID`));
+  if (existingAdd) {
+    console.log(chalk.gray(`  ${addName.trim()} was already in the pool — MLB ID carried over, no fetch-mlb-ids needed.`));
+  } else {
+    console.log(chalk.gray(`  ${addName.trim()} is a new name — run 'npm run fetch-mlb-ids -- --save' to match their MLB ID.`));
+  }
   console.log(chalk.yellow(`\n⚠️  Remember: restart the watcher so it picks up the new player in its cache.`));
 }
 

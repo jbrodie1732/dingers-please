@@ -54,6 +54,9 @@ export default function AdminPanel() {
   const [dropPlayer,   setDropPlayer]   = useState<RosterPlayer | null>(null);
   const [addName,      setAddName]      = useState('');
   const [adNotes,      setAdNotes]      = useState('');
+  // Open slots = players dropped without a replacement (recovery path)
+  const [openSlots,    setOpenSlots]    = useState<RosterPlayer[]>([]);
+  const [fillNames,    setFillNames]    = useState<Record<string, string>>({});
 
   // Manual HR
   const [hrPlayer, setHrPlayer] = useState('');
@@ -129,14 +132,27 @@ export default function AdminPanel() {
   useEffect(() => { if (authed) fetchData(); }, [authed, fetchData]);
 
   useEffect(() => {
-    if (!selectedTeam) { setRoster([]); setDropPlayer(null); return; }
+    if (!selectedTeam) { setRoster([]); setDropPlayer(null); setOpenSlots([]); setFillNames({}); return; }
     supabase
       .from('players')
-      .select('id, name, position')
+      .select('id, name, position, dropped_at')
       .eq('team_id', selectedTeam.id)
-      .is('dropped_at', null)
       .order('position')
-      .then(({ data }) => setRoster((data ?? []) as RosterPlayer[]));
+      .then(({ data }) => {
+        const rows = (data ?? []) as (RosterPlayer & { dropped_at: string | null })[];
+        const active = rows.filter(p => !p.dropped_at);
+        setRoster(active);
+        // An open slot = a position that has a dropped player but no active one.
+        const activePositions = new Set(active.map(p => p.position));
+        const dropped = rows
+          .filter(p => p.dropped_at && !activePositions.has(p.position))
+          .sort((a, b) => (b.dropped_at! < a.dropped_at! ? -1 : 1)); // most-recent first
+        const byPosition = new Map<string, RosterPlayer>();
+        for (const p of dropped) {
+          if (!byPosition.has(p.position)) byPosition.set(p.position, p);
+        }
+        setOpenSlots(Array.from(byPosition.values()));
+      });
   }, [selectedTeam]);
 
   async function callAdmin(action: string, extra: object = {}) {
@@ -165,6 +181,18 @@ export default function AdminPanel() {
       notes:         adNotes.trim() || undefined,
     });
     setDropPlayer(null); setAddName(''); setAdNotes(''); setSelectedTeam(null);
+  }
+
+  async function submitFillSlot(slot: RosterPlayer) {
+    if (!selectedTeam) return;
+    const name = (fillNames[slot.id] ?? '').trim();
+    if (!name) return;
+    await callAdmin('fill-slot', {
+      teamId:          selectedTeam.id,
+      droppedPlayerId: slot.id,
+      addPlayerName:   name,
+    });
+    setFillNames({}); setSelectedTeam(null);
   }
 
   // ── PIN gate ──────────────────────────────────────────────────────────────
@@ -263,6 +291,41 @@ export default function AdminPanel() {
                 })}
               </div>
             </div>
+
+            {selectedTeam && !budgetExhausted && openSlots.length > 0 && (
+              <div className="addrop-step">
+                <div className="addrop-step-head">
+                  <span className="step-num">!</span>
+                  Open slot{openSlots.length > 1 ? 's' : ''} — needs a replacement
+                  <span className="addrop-step-sub">a player was dropped without an add</span>
+                </div>
+                {openSlots.map(slot => (
+                  <div key={slot.id} className="addrop-form" style={{ marginBottom: 8 }}>
+                    <div className="addrop-field" style={{ minWidth: 150 }}>
+                      <div className="addrop-field-lbl">{slot.position} — DROPPED</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, padding: '6px 0' }}>{slot.name}</div>
+                    </div>
+                    <label className="addrop-field">
+                      <div className="addrop-field-lbl">ADD A {slot.position}</div>
+                      <input
+                        className="addrop-input"
+                        placeholder="Full MLB name"
+                        value={fillNames[slot.id] ?? ''}
+                        onChange={e => setFillNames(f => ({ ...f, [slot.id]: e.target.value }))}
+                      />
+                    </label>
+                    <button
+                      className="addrop-submit"
+                      style={{ background: getTeamColor(selectedTeam.id, selectedTeam.draft_position) }}
+                      onClick={() => submitFillSlot(slot)}
+                      disabled={!(fillNames[slot.id] ?? '').trim() || loading}
+                    >
+                      {loading ? 'Processing…' : <>Add <b>{(fillNames[slot.id] ?? '').trim() || '?'}</b></>}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {selectedTeam && !budgetExhausted && (
               <div className="addrop-step">
