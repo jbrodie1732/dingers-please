@@ -17,8 +17,36 @@ const {
 } = require('../db/queries');
 
 const POLL_INTERVAL_MS     = Number(process.env.POLL_INTERVAL_MS)     || 60000;
-const EMPTY_POLL_THRESHOLD = Number(process.env.EMPTY_POLL_THRESHOLD) || 120;
+// After the protected window (below), how many consecutive game-less polls
+// before we shut down. 60 polls × 60s ≈ 1 hour of quiet after the last game.
+const EMPTY_POLL_THRESHOLD = Number(process.env.EMPTY_POLL_THRESHOLD) || 60;
+
+// Protected window — while the local clock is inside [START, END) in WATCHER_TZ
+// we NEVER auto-exit on empty polls, even if there are no games yet. This stops
+// the watcher from killing itself during a mid-day gap (e.g. it boots at 9am but
+// first pitch isn't until a 7pm night game) and then not coming back until the
+// next 9am cron. Outside the window (after END, and overnight before START) the
+// EMPTY_POLL_THRESHOLD idle-exit arms, so it dies ~1h after the last game ends
+// and PM2's 9am cron_restart revives it the next morning.
+const WATCHER_TZ         = process.env.WATCHER_TZ || 'America/Los_Angeles';
+const PROTECTED_START_HOUR = Number(process.env.PROTECTED_START_HOUR) || 9;   // 9am PT
+const PROTECTED_END_HOUR   = Number(process.env.PROTECTED_END_HOUR)   || 19;  // 7pm PT
 const CSV_PATH = path.join(__dirname, '../../data/mlb_stadia_paths.csv');
+
+// Current hour-of-day (0–23) in WATCHER_TZ, independent of the host machine's
+// own timezone — so the window means the same thing wherever this runs.
+function currentHourInTz(tz) {
+  const hourStr = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, hour: 'numeric', hour12: false,
+  }).formatToParts(new Date()).find(p => p.type === 'hour').value;
+  return Number(hourStr) % 24; // 'hour12:false' can emit 24 for midnight on some ICU builds
+}
+
+// True while we're in the guaranteed-on window and must not auto-exit.
+function inProtectedWindow() {
+  const hour = currentHourInTz(WATCHER_TZ);
+  return hour >= PROTECTED_START_HOUR && hour < PROTECTED_END_HOUR;
+}
 
 // How far back the catch-up sweep will look for un-alerted home runs. Bounds it
 // so a watcher that was down for a long time doesn't blast stale alerts.
@@ -194,8 +222,10 @@ async function pollGames() {
 
     if (activeGames.length === 0) {
       emptyPollCount++;
-      if (emptyPollCount >= EMPTY_POLL_THRESHOLD && gamesToProcess.length === 0) {
-        console.log('🏁 No active games for a while. Watcher shutting down until tomorrow.');
+      // Never shut down inside the protected window — only arm the idle-exit
+      // once we're past PROTECTED_END_HOUR (or overnight before START).
+      if (!inProtectedWindow() && emptyPollCount >= EMPTY_POLL_THRESHOLD && gamesToProcess.length === 0) {
+        console.log('🏁 No active games for a while (past protected window). Watcher shutting down until tomorrow.');
         process.exit(0);
       }
       if (gamesToProcess.length === 0) return;
